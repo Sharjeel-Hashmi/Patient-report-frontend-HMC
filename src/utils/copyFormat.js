@@ -8,16 +8,30 @@ const fmtDate = (d) => {
   return `${dd}.${mm}.${yyyy}`;
 };
 
-// Pads a string with spaces on the right up to `width` (monospace-style alignment,
-// works without any table/grid lines when pasted into chat apps, notes, docs, etc.)
+// IMPORTANT: use non-breaking spaces (\u00A0) instead of regular spaces for padding.
+// Many paste destinations (WhatsApp Web, Gmail, chat apps, Notion, contenteditable
+// boxes, etc.) are HTML-based and silently COLLAPSE consecutive regular spaces down
+// to a single space when rendering pasted text — even in a monospace font. Regular
+// spaces would then look "correctly aligned" in a plain-text editor but break apart
+// the moment they're pasted into any HTML-based app. Non-breaking spaces are never
+// collapsed, so column alignment survives no matter where the text is pasted.
+const NBSP = "\u00A0";
+
 const pad = (str, width) => {
   const s = String(str);
-  return s.length >= width ? s + " " : s + " ".repeat(width - s.length);
+  if (s.length >= width) return s + NBSP;
+  return s + NBSP.repeat(width - s.length);
 };
 
 const LABEL_WIDTH = 12;
 const VALUE_WIDTH = 10;
 
+/**
+ * Builds aligned plain-text for a SINGLE report (Detail page copy):
+ * "Blood test of DD.MM.YYYY"
+ * blank line
+ * Parameter   Value
+ */
 export function buildSingleReportCopyText(report) {
   const lines = [`Blood test of ${fmtDate(report.date)}`, ""];
 
@@ -30,6 +44,14 @@ export function buildSingleReportCopyText(report) {
   return lines.join("\n");
 }
 
+/**
+ * Builds aligned plain-text for TWO reports (Compare page copy):
+ * "Blood tests of DD.MM.YYYY and DD.MM.YYYY"
+ * blank line
+ * Parameter   PrevValue   RecentValue
+ * (no header row, no grid lines — space-aligned columns using non-breaking spaces
+ * so alignment survives pasting into any app)
+ */
 export function buildCompareCopyText(prevReport, currReport) {
   const lines = [
     `Blood tests of ${fmtDate(prevReport.date)} and ${fmtDate(currReport.date)}`,
