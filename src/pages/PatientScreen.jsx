@@ -67,7 +67,7 @@ export default function PatientScreen() {
           <div>
             <div style={s.h1}>{patient.name}</div>
             <div style={s.muted}>
-              {patient.dob ? `DOB: ${new Date(patient.dob).toLocaleDateString()}` : "DOB not set"} · {patient.gender}
+              {patient.dob ? `DOB: ${new Date(patient.dob).toLocaleDateString('en-IE')}` : "DOB not set"} · {patient.gender}
               {patient.phone ? ` · ${patient.phone}` : ""}
             </div>
             {patient.address && <div style={{ ...s.muted, marginTop: 4 }}>{patient.address}</div>}
@@ -99,7 +99,7 @@ export default function PatientScreen() {
                 <FiZap /> Compare Latest 2 Reports
               </div>
               <div style={{ fontSize: 12.5, opacity: 0.9 }}>
-                {new Date(latestTwo[1].date).toLocaleDateString()} vs {new Date(latestTwo[0].date).toLocaleDateString()}
+                {new Date(latestTwo[1].date).toLocaleDateString('en-IE')} vs {new Date(latestTwo[0].date).toLocaleDateString('en-IE')}
               </div>
             </div>
             <FiArrowRight size={22} />
@@ -118,7 +118,7 @@ export default function PatientScreen() {
             {sortedReports.map((r) => (
               <div key={r._id} style={{ ...s.card, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
                 <div style={{ cursor: "pointer", flex: 1 }} onClick={() => navigate(`/patients/${id}/reports/${r._id}`)}>
-                  <div style={{ fontWeight: 700, color: theme.text }}>{new Date(r.date).toLocaleDateString()}</div>
+                  <div style={{ fontWeight: 700, color: theme.text }}>{new Date(r.date).toLocaleDateString('en-IE')}</div>
                   <div style={s.muted}>{r.labName || "No lab specified"}</div>
                 </div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
