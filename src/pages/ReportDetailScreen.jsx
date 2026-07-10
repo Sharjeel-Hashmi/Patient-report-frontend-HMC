@@ -48,7 +48,7 @@ export default function ReportDetailScreen() {
         <div style={{ ...s.card, marginBottom: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
             <div>
-              <div style={s.h1}>Report — {new Date(report.date).toLocaleDateString()}</div>
+              <div style={s.h1}>Report — {new Date(report.date).toLocaleDateString('en-IE')}</div>
               <div style={s.muted}>{report.labName || "Lab not specified"}</div>
             </div>
             <div style={{ display: "flex", gap: 10 }} className="no-print">
