@@ -84,7 +84,7 @@ export default function CompareScreen() {
               <label style={s.label}>Previous Report (P)</label>
               <select style={s.input} value={prevReport._id} onChange={(e) => handleSelect("a", e.target.value)}>
                 {sortedReports.map((r) => (
-                  <option key={r._id} value={r._id}>{new Date(r.date).toLocaleDateString()} — {r.labName || "No lab"}</option>
+                  <option key={r._id} value={r._id}>{new Date(r.date).toLocaleDateString('en-IE')} — {r.labName || "No lab"}</option>
                 ))}
               </select>
             </div>
@@ -92,7 +92,7 @@ export default function CompareScreen() {
               <label style={s.label}>Recent Report (R)</label>
               <select style={s.input} value={currReport._id} onChange={(e) => handleSelect("b", e.target.value)}>
                 {sortedReports.map((r) => (
-                  <option key={r._id} value={r._id}>{new Date(r.date).toLocaleDateString()} — {r.labName || "No lab"}</option>
+                  <option key={r._id} value={r._id}>{new Date(r.date).toLocaleDateString('en-IE')} — {r.labName || "No lab"}</option>
                 ))}
               </select>
             </div>
@@ -149,8 +149,8 @@ export default function CompareScreen() {
               <thead>
                 <tr style={{ textAlign: "left", borderBottom: `2px solid ${theme.border}` }}>
                   <th style={{ padding: "10px 8px" }}>Parameter</th>
-                  <th style={{ padding: "10px 8px" }}>Previous ({new Date(prevReport.date).toLocaleDateString()})</th>
-                  <th style={{ padding: "10px 8px" }}>Recent ({new Date(currReport.date).toLocaleDateString()})</th>
+                  <th style={{ padding: "10px 8px" }}>Previous ({new Date(prevReport.date).toLocaleDateString('en-IE')})</th>
+                  <th style={{ padding: "10px 8px" }}>Recent ({new Date(currReport.date).toLocaleDateString('en-IE')})</th>
                   <th style={{ padding: "10px 8px" }}>Change</th>
                   {/* Status columns available below — commented out per current design, uncomment to re-enable
                   <th style={{ padding: "10px 8px" }}>Prev Status</th>
