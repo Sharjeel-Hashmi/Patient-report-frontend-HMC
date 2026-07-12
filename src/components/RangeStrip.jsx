@@ -18,6 +18,9 @@ export default function RangeStrip({ paramKey, previousValue, currentValue }) {
   // Solid zone boundaries: Blue (Low) | Green (Normal) | Red (High)
   const bandStart = toPercent(min, min, max);
   const bandEnd = toPercent(max, min, max);
+  const blueCenter = bandStart / 2;
+  const greenCenter = (bandStart + bandEnd) / 2;
+  const redCenter = (bandEnd + 100) / 2;
 
   const hasPrev = previousValue !== undefined && previousValue !== null && previousValue !== "";
   const hasCurrent = currentValue !== undefined && currentValue !== null && currentValue !== "";
@@ -28,20 +31,22 @@ export default function RangeStrip({ paramKey, previousValue, currentValue }) {
   const prevStatus = hasPrev ? getStatus(paramKey, previousValue) : null;
   const currStatus = hasCurrent ? getStatus(paramKey, currentValue) : null;
 
-  const MARKER_AREA = 40; // shape + connector line height
+  const MARKER_SIZE = 24;
+  const MARKER_AREA = 46; // shape + connector line height
   const STRIP_TOP = MARKER_AREA;
   const STRIP_HEIGHT = 16;
-  const LABEL_TOP = STRIP_TOP + STRIP_HEIGHT + 4;
+  const NUM_LABEL_TOP = STRIP_TOP + STRIP_HEIGHT + 4;
+  const ZONE_LABEL_TOP = NUM_LABEL_TOP + 16;
 
   return (
-    <div style={{ marginBottom: 30 }}>
+    <div style={{ marginBottom: 34 }}>
       <div style={{ marginBottom: 6 }}>
         <span style={{ fontWeight: 700, fontSize: 14, color: theme.text }}>
           {range.label} <span style={{ color: theme.textMuted, fontWeight: 400, fontSize: 12 }}>({range.unit})</span>
         </span>
       </div>
 
-      <div style={{ position: "relative", height: LABEL_TOP + 18 }}>
+      <div style={{ position: "relative", height: ZONE_LABEL_TOP + 18 }}>
         {/* Solid 3-zone strip: Blue (Low) | Green (Normal) | Red (High) */}
         <div
           style={{
@@ -76,57 +81,46 @@ export default function RangeStrip({ paramKey, previousValue, currentValue }) {
           }}
         />
 
-        {/* Normal range min/max labels, placed under the green zone's edges */}
-        <div
-          style={{
-            position: "absolute",
-            top: LABEL_TOP,
-            left: `calc(${bandStart}% - 14px)`,
-            width: 28,
-            textAlign: "center",
-            fontSize: 11,
-            fontWeight: 700,
-            color: theme.textMuted,
-          }}
-        >
+        {/* Normal range min/max numbers, under the green zone's edges */}
+        <div style={{ position: "absolute", top: NUM_LABEL_TOP, left: `calc(${bandStart}% - 14px)`, width: 28, textAlign: "center", fontSize: 11, fontWeight: 700, color: theme.textMuted }}>
           {min}
         </div>
-        <div
-          style={{
-            position: "absolute",
-            top: LABEL_TOP,
-            left: `calc(${bandEnd}% - 14px)`,
-            width: 28,
-            textAlign: "center",
-            fontSize: 11,
-            fontWeight: 700,
-            color: theme.textMuted,
-          }}
-        >
+        <div style={{ position: "absolute", top: NUM_LABEL_TOP, left: `calc(${bandEnd}% - 14px)`, width: 28, textAlign: "center", fontSize: 11, fontWeight: 700, color: theme.textMuted }}>
           {max}
         </div>
 
-        {/* Previous marker — square shape with "P", connector line down to the strip */}
+        {/* Permanent zone labels: Low / Normal / High */}
+        <div style={{ position: "absolute", top: ZONE_LABEL_TOP, left: `${blueCenter}%`, transform: "translateX(-50%)", fontSize: 13, fontWeight: 800, color: theme.blue, whiteSpace: "nowrap" }}>
+          Low
+        </div>
+        <div style={{ position: "absolute", top: ZONE_LABEL_TOP, left: `${greenCenter}%`, transform: "translateX(-50%)", fontSize: 13, fontWeight: 800, color: theme.green, whiteSpace: "nowrap" }}>
+          Normal
+        </div>
+        <div style={{ position: "absolute", top: ZONE_LABEL_TOP, left: `${redCenter}%`, transform: "translateX(-50%)", fontSize: 13, fontWeight: 800, color: theme.red, whiteSpace: "nowrap" }}>
+          High
+        </div>
+
+        {/* Previous marker — hollow square outline with "P", connector line down to the strip */}
         {hasPrev && (
           <>
             <div
               title={`Previous: ${previousValue}`}
               style={{
                 position: "absolute",
-                left: `calc(${prevPct}% - 9px)`,
+                left: `calc(${prevPct}% - ${MARKER_SIZE / 2}px)`,
                 top: 0,
-                width: 18,
-                height: 18,
-                borderRadius: 4,
-                background: statusColor(prevStatus).color,
-                border: "2px solid #fff",
+                width: MARKER_SIZE,
+                height: MARKER_SIZE,
+                borderRadius: 5,
+                background: "#fff",
+                border: `2.5px solid ${statusColor(prevStatus).color}`,
                 boxShadow: theme.shadow,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: 9,
+                fontSize: 12,
                 fontWeight: 800,
-                color: "#fff",
+                color: statusColor(prevStatus).color,
                 zIndex: 3,
               }}
             >
@@ -136,9 +130,9 @@ export default function RangeStrip({ paramKey, previousValue, currentValue }) {
               style={{
                 position: "absolute",
                 left: `calc(${prevPct}% - 1px)`,
-                top: 18,
+                top: MARKER_SIZE,
                 width: 2,
-                height: STRIP_TOP - 18,
+                height: STRIP_TOP - MARKER_SIZE,
                 background: statusColor(prevStatus).color,
                 zIndex: 2,
               }}
@@ -146,35 +140,54 @@ export default function RangeStrip({ paramKey, previousValue, currentValue }) {
           </>
         )}
 
-        {/* Recent marker — downward triangle shape with "R", connector line down to the strip */}
+        {/* Recent marker — hollow downward triangle outline with "R", connector line down to the strip */}
         {hasCurrent && (
           <>
             <div
               title={`Recent: ${currentValue}`}
               style={{
                 position: "absolute",
-                left: `calc(${currPct}% - 10px)`,
+                left: `calc(${currPct}% - ${MARKER_SIZE / 2 + 2}px)`,
                 top: 0,
-                width: 20,
-                height: 18,
+                width: MARKER_SIZE + 4,
+                height: MARKER_SIZE,
                 clipPath: "polygon(50% 100%, 0% 0%, 100% 0%)",
                 background: statusColor(currStatus).color,
-                display: "flex",
-                alignItems: "flex-start",
-                justifyContent: "center",
-                paddingTop: 2,
                 zIndex: 4,
               }}
             >
-              <span style={{ fontSize: 9, fontWeight: 800, color: "#fff" }}>R</span>
+              <div
+                style={{
+                  position: "absolute",
+                  top: 2.5,
+                  left: 2.8,
+                  width: MARKER_SIZE + 4 - 5.6,
+                  height: MARKER_SIZE - 5,
+                  clipPath: "polygon(50% 100%, 0% 0%, 100% 0%)",
+                  background: "#fff",
+                }}
+              />
+              <span
+                style={{
+                  position: "absolute",
+                  top: 4,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  fontSize: 12,
+                  fontWeight: 800,
+                  color: statusColor(currStatus).color,
+                }}
+              >
+                R
+              </span>
             </div>
             <div
               style={{
                 position: "absolute",
                 left: `calc(${currPct}% - 1px)`,
-                top: 18,
+                top: MARKER_SIZE,
                 width: 2,
-                height: STRIP_TOP - 18,
+                height: STRIP_TOP - MARKER_SIZE,
                 background: statusColor(currStatus).color,
                 zIndex: 2,
               }}
