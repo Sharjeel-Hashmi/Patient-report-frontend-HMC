@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FiEdit2, FiTrash2, FiPlus, FiEye, FiZap, FiRepeat, FiArrowRight, FiGitCommit } from "react-icons/fi";
+import { FiEdit2, FiTrash2, FiPlus, FiEye, FiZap, FiRepeat, FiArrowRight, FiGitCommit, FiArrowLeft } from "react-icons/fi";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { api } from "../api/api";
@@ -51,10 +51,8 @@ export default function PatientScreen() {
     }
   };
 
-  // if (loading) return <div style={s.page}><Header title="Patient" showBack /><div style={s.container}><div style={s.muted}>Loading...</div></div></div>;
-  if (loading) return <div style={s.page}><Header title="Patient" showBack onBack={() => navigate("/")} /><div style={s.container}><div style={s.muted}>Loading...</div></div></div>;
-  // if (error || !patient) return <div style={s.page}><Header title="Patient" showBack /><div style={s.container}><div style={s.error}>{error || "Patient not found"}</div></div></div>;
-  if (error || !patient) return <div style={s.page}><Header title="Patient" showBack onBack={() => navigate("/")} /><div style={s.container}><div style={s.error}>{error || "Patient not found"}</div></div></div>;
+  if (loading) return <div style={s.page}><Header title="Patient" showBack /><div style={s.container}><div style={s.muted}>Loading...</div></div></div>;
+  if (error || !patient) return <div style={s.page}><Header title="Patient" showBack /><div style={s.container}><div style={s.error}>{error || "Patient not found"}</div></div></div>;
 
   const sortedReports = [...patient.reports].sort((a, b) => new Date(b.date) - new Date(a.date));
   const latestTwo = sortedReports.slice(0, 2);
@@ -67,12 +65,13 @@ export default function PatientScreen() {
           <div>
             <div style={s.h1}>{patient.name}</div>
             <div style={s.muted}>
-              {patient.dob ? `DOB: ${new Date(patient.dob).toLocaleDateString('en-IE')}` : "DOB not set"} · {patient.gender}
+              {patient.dob ? `DOB: ${new Date(patient.dob).toLocaleDateString()}` : "DOB not set"} · {patient.gender}
               {patient.phone ? ` · ${patient.phone}` : ""}
             </div>
             {patient.address && <div style={{ ...s.muted, marginTop: 4 }}>{patient.address}</div>}
           </div>
           <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+            <button style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 6 }} onClick={() => navigate("/")}><FiArrowLeft size={14} />Back</button>
             <button style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 6 }} onClick={() => setShowEdit(true)}><FiEdit2 size={14} />Edit</button>
             <button style={{ ...s.btnDanger, display: "flex", alignItems: "center", gap: 6 }} onClick={handleDeletePatient}><FiTrash2 size={14} />Delete</button>
           </div>
@@ -99,7 +98,7 @@ export default function PatientScreen() {
                 <FiZap /> Compare Latest 2 Reports
               </div>
               <div style={{ fontSize: 12.5, opacity: 0.9 }}>
-                {new Date(latestTwo[1].date).toLocaleDateString('en-IE')} vs {new Date(latestTwo[0].date).toLocaleDateString('en-IE')}
+                {new Date(latestTwo[1].date).toLocaleDateString()} vs {new Date(latestTwo[0].date).toLocaleDateString()}
               </div>
             </div>
             <FiArrowRight size={22} />
@@ -118,7 +117,7 @@ export default function PatientScreen() {
             {sortedReports.map((r) => (
               <div key={r._id} style={{ ...s.card, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
                 <div style={{ cursor: "pointer", flex: 1 }} onClick={() => navigate(`/patients/${id}/reports/${r._id}`)}>
-                  <div style={{ fontWeight: 700, color: theme.text }}>{new Date(r.date).toLocaleDateString('en-IE')}</div>
+                  <div style={{ fontWeight: 700, color: theme.text }}>{new Date(r.date).toLocaleDateString()}</div>
                   <div style={s.muted}>{r.labName || "No lab specified"}</div>
                 </div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
