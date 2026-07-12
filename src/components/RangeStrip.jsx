@@ -1,7 +1,7 @@
 import { RANGES, getStatus, statusColor, theme } from "../theme";
 
 // Maps a value onto a 0-100% position along an extended visual range
-// (adds 30% padding on each side of the normal range so out-of-range values are visible)
+// (adds 60% padding on each side of the normal range so out-of-range values are visible)
 function toPercent(value, min, max) {
   const pad = (max - min) * 0.6 || 1;
   const lo = min - pad;
@@ -15,6 +15,7 @@ export default function RangeStrip({ paramKey, previousValue, currentValue }) {
   const min = range.min;
   const max = range.max;
 
+  // Solid zone boundaries: Blue (Low) | Green (Normal) | Red (High)
   const bandStart = toPercent(min, min, max);
   const bandEnd = toPercent(max, min, max);
 
@@ -27,108 +28,171 @@ export default function RangeStrip({ paramKey, previousValue, currentValue }) {
   const prevStatus = hasPrev ? getStatus(paramKey, previousValue) : null;
   const currStatus = hasCurrent ? getStatus(paramKey, currentValue) : null;
 
+  const MARKER_AREA = 40; // shape + connector line height
+  const STRIP_TOP = MARKER_AREA;
+  const STRIP_HEIGHT = 16;
+  const LABEL_TOP = STRIP_TOP + STRIP_HEIGHT + 4;
+
   return (
-    <div style={{ marginBottom: 22 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+    <div style={{ marginBottom: 30 }}>
+      <div style={{ marginBottom: 6 }}>
         <span style={{ fontWeight: 700, fontSize: 14, color: theme.text }}>
           {range.label} <span style={{ color: theme.textMuted, fontWeight: 400, fontSize: 12 }}>({range.unit})</span>
         </span>
-        <span style={{ fontSize: 12, color: theme.textMuted }}>
-          Normal: {min}–{max}
-        </span>
       </div>
 
-      <div style={{ position: "relative", height: 34, marginTop: 8 }}>
-        {/* base track */}
+      <div style={{ position: "relative", height: LABEL_TOP + 18 }}>
+        {/* Solid 3-zone strip: Blue (Low) | Green (Normal) | Red (High) */}
         <div
           style={{
             position: "absolute",
-            top: 13,
+            top: STRIP_TOP,
             left: 0,
-            right: 0,
-            height: 8,
-            borderRadius: 6,
-            background: "#f0f2f7",
+            width: `${bandStart}%`,
+            height: STRIP_HEIGHT,
+            background: theme.blue,
+            borderRadius: "8px 0 0 8px",
           }}
         />
-        {/* green normal band */}
         <div
           style={{
             position: "absolute",
-            top: 13,
+            top: STRIP_TOP,
             left: `${bandStart}%`,
             width: `${bandEnd - bandStart}%`,
-            height: 8,
-            borderRadius: 6,
-            background: theme.greenBg,
-            border: `1px solid ${theme.green}`,
+            height: STRIP_HEIGHT,
+            background: theme.green,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: STRIP_TOP,
+            left: `${bandEnd}%`,
+            width: `${100 - bandEnd}%`,
+            height: STRIP_HEIGHT,
+            background: theme.red,
+            borderRadius: "0 8px 8px 0",
           }}
         />
 
-        {/* Previous marker - square with P */}
+        {/* Normal range min/max labels, placed under the green zone's edges */}
+        <div
+          style={{
+            position: "absolute",
+            top: LABEL_TOP,
+            left: `calc(${bandStart}% - 14px)`,
+            width: 28,
+            textAlign: "center",
+            fontSize: 11,
+            fontWeight: 700,
+            color: theme.textMuted,
+          }}
+        >
+          {min}
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            top: LABEL_TOP,
+            left: `calc(${bandEnd}% - 14px)`,
+            width: 28,
+            textAlign: "center",
+            fontSize: 11,
+            fontWeight: 700,
+            color: theme.textMuted,
+          }}
+        >
+          {max}
+        </div>
+
+        {/* Previous marker — square shape with "P", connector line down to the strip */}
         {hasPrev && (
-          <div
-            title={`Previous: ${previousValue}`}
-            style={{
-              position: "absolute",
-              left: `calc(${prevPct}% - 9px)`,
-              top: 2,
-              width: 18,
-              height: 18,
-              borderRadius: 4,
-              background: statusColor(prevStatus).bg,
-              border: `2px solid ${statusColor(prevStatus).color}`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 9,
-              fontWeight: 800,
-              color: statusColor(prevStatus).color,
-              zIndex: 2,
-            }}
-          >
-            P
-          </div>
+          <>
+            <div
+              title={`Previous: ${previousValue}`}
+              style={{
+                position: "absolute",
+                left: `calc(${prevPct}% - 9px)`,
+                top: 0,
+                width: 18,
+                height: 18,
+                borderRadius: 4,
+                background: statusColor(prevStatus).color,
+                border: "2px solid #fff",
+                boxShadow: theme.shadow,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 9,
+                fontWeight: 800,
+                color: "#fff",
+                zIndex: 3,
+              }}
+            >
+              P
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: `calc(${prevPct}% - 1px)`,
+                top: 18,
+                width: 2,
+                height: STRIP_TOP - 18,
+                background: statusColor(prevStatus).color,
+                zIndex: 2,
+              }}
+            />
+          </>
         )}
 
-        {/* Current/Recent marker - circle with R */}
+        {/* Recent marker — downward triangle shape with "R", connector line down to the strip */}
         {hasCurrent && (
-          <div
-            title={`Recent: ${currentValue}`}
-            style={{
-              position: "absolute",
-              left: `calc(${currPct}% - 10px)`,
-              top: 1,
-              width: 20,
-              height: 20,
-              borderRadius: "50%",
-              background: statusColor(currStatus).color,
-              border: "2px solid #fff",
-              boxShadow: theme.shadow,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 10,
-              fontWeight: 800,
-              color: "#fff",
-              zIndex: 3,
-            }}
-          >
-            R
-          </div>
+          <>
+            <div
+              title={`Recent: ${currentValue}`}
+              style={{
+                position: "absolute",
+                left: `calc(${currPct}% - 10px)`,
+                top: 0,
+                width: 20,
+                height: 18,
+                clipPath: "polygon(50% 100%, 0% 0%, 100% 0%)",
+                background: statusColor(currStatus).color,
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "center",
+                paddingTop: 2,
+                zIndex: 4,
+              }}
+            >
+              <span style={{ fontSize: 9, fontWeight: 800, color: "#fff" }}>R</span>
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: `calc(${currPct}% - 1px)`,
+                top: 18,
+                width: 2,
+                height: STRIP_TOP - 18,
+                background: statusColor(currStatus).color,
+                zIndex: 2,
+              }}
+            />
+          </>
         )}
       </div>
 
       <div style={{ display: "flex", gap: 16, marginTop: 4, fontSize: 12, color: theme.textMuted }}>
         {hasPrev && (
           <span>
-            ▪ Previous: <b style={{ color: theme.text }}>{previousValue}</b>{" "}
+            ■ Previous: <b style={{ color: theme.text }}>{previousValue}</b>{" "}
             <span style={{ color: statusColor(prevStatus).color, fontWeight: 600 }}>({prevStatus})</span>
           </span>
         )}
         {hasCurrent && (
           <span>
-            ● Recent: <b style={{ color: theme.text }}>{currentValue}</b>{" "}
+            ▼ Recent: <b style={{ color: theme.text }}>{currentValue}</b>{" "}
             <span style={{ color: statusColor(currStatus).color, fontWeight: 600 }}>({currStatus})</span>
           </span>
         )}

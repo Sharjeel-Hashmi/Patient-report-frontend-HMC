@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiPlus, FiX, FiUsers, FiFileText, FiSearch, FiCalendar, FiChevronRight } from "react-icons/fi";
+import { FiPlus, FiX, FiUsers, FiFileText, FiSearch, FiCalendar, FiChevronRight, FiChevronLeft } from "react-icons/fi";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { api } from "../api/api";
 import { theme } from "../theme";
 import { s } from "../styles";
+
+const PAGE_SIZE = 10;
 
 export default function Home() {
   const [patients, setPatients] = useState([]);
@@ -15,29 +17,39 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const navigate = useNavigate();
 
   const loadPatients = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const params = {};
+      const params = { page, limit: PAGE_SIZE };
       if (search) params.search = search;
       if (dobFilter) params.dob = dobFilter;
       if (reportDateFilter) params.reportDate = reportDateFilter;
       const data = await api.getPatients(params);
-      setPatients(data);
+      setPatients(data.patients);
+      setTotalPages(data.totalPages);
+      setTotalCount(data.totalCount);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [search, dobFilter, reportDateFilter]);
+  }, [search, dobFilter, reportDateFilter, page]);
 
   useEffect(() => {
     const timer = setTimeout(loadPatients, 300);
     return () => clearTimeout(timer);
   }, [loadPatients]);
+
+  // Reset back to page 1 whenever a filter changes (avoids landing on an empty page)
+  useEffect(() => {
+    setPage(1);
+  }, [search, dobFilter, reportDateFilter]);
 
   const clearFilters = () => {
     setSearch("");
@@ -48,7 +60,7 @@ export default function Home() {
   return (
     <div style={s.page}>
       <Header
-        title="Doctor's Dashboard"
+        title="Patients"
         right={
           <button onClick={() => setShowAddModal(true)} style={{ ...s.btnPrimary, background: "rgba(255,255,255,0.95)", color: theme.primary, display: "flex", alignItems: "center", gap: 6 }}>
             <FiPlus size={15} /> Add Patient
@@ -83,43 +95,73 @@ export default function Home() {
             No patients found. Click "+ Add Patient" to create one.
           </div>
         ) : (
-          <div style={{ display: "grid", gap: 12 }}>
-            {patients.map((p) => (
-              <div
-                key={p._id}
-                onClick={() => navigate(`/patients/${p._id}`)}
-                style={{
-                  ...s.card,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  cursor: "pointer",
-                  transition: "box-shadow 0.15s",
-                }}
-              >
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 15.5, color: theme.text, display: "flex", alignItems: "center", gap: 8 }}><FiUsers style={{ color: theme.primary }} /> {p.name}</div>
-                  <div style={s.muted}>
-                    {p.dob ? `DOB: ${new Date(p.dob).toLocaleDateString()}` : "DOB not set"} · {p.gender || "N/A"}
+          <>
+            <div style={{ display: "grid", gap: 12 }}>
+              {patients.map((p) => (
+                <div
+                  key={p._id}
+                  onClick={() => navigate(`/patients/${p._id}`)}
+                  style={{
+                    ...s.card,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    cursor: "pointer",
+                    transition: "box-shadow 0.15s",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 15.5, color: theme.text, display: "flex", alignItems: "center", gap: 8 }}><FiUsers style={{ color: theme.primary }} /> {p.name}</div>
+                    <div style={s.muted}>
+                      {p.dob ? `DOB: ${new Date(p.dob).toLocaleDateString()}` : "DOB not set"} · {p.gender || "N/A"}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: theme.primary, display: "flex", alignItems: "center", gap: 5, justifyContent: "flex-end" }}>
+                        <FiFileText size={13} />
+                        {p.reports.length} report{p.reports.length !== 1 ? "s" : ""}
+                      </div>
+                      {p.reports.length > 0 && (
+                        <div style={{ fontSize: 12, color: theme.textMuted }}>
+                          Last: {new Date(p.reports[p.reports.length - 1].date).toLocaleDateString()}
+                        </div>
+                      )}
+                    </div>
+                    <FiChevronRight color={theme.textMuted} />
                   </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: theme.primary, display: "flex", alignItems: "center", gap: 5, justifyContent: "flex-end" }}>
-                      <FiFileText size={13} />
-                      {p.reports.length} report{p.reports.length !== 1 ? "s" : ""}
-                    </div>
-                    {p.reports.length > 0 && (
-                      <div style={{ fontSize: 12, color: theme.textMuted }}>
-                        Last: {new Date(p.reports[p.reports.length - 1].date).toLocaleDateString()}
-                      </div>
-                    )}
-                  </div>
-                  <FiChevronRight color={theme.textMuted} />
+              ))}
+            </div>
+
+            {/* Pagination controls */}
+            {totalPages > 1 && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 20, flexWrap: "wrap", gap: 12 }}>
+                <div style={{ fontSize: 13, color: theme.textMuted }}>
+                  Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalCount)} of {totalCount} patients
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 4, opacity: page === 1 ? 0.5 : 1, cursor: page === 1 ? "not-allowed" : "pointer" }}
+                  >
+                    <FiChevronLeft /> Prev
+                  </button>
+                  <span style={{ fontSize: 13.5, fontWeight: 600, color: theme.text, padding: "0 6px" }}>
+                    Page {page} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 4, opacity: page === totalPages ? 0.5 : 1, cursor: page === totalPages ? "not-allowed" : "pointer" }}
+                  >
+                    Next <FiChevronRight />
+                  </button>
                 </div>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
       <Footer />
