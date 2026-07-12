@@ -108,7 +108,7 @@ export default function Header({ title, showBack, onBack, right }) {
             >
               <FiSettings />
             </button>
-            <span style={{ color: "#fff", fontSize: 18, fontWeight: 600, opacity: 0.9 }}>{user.name}</span>
+            <span style={{ color: "#fff", fontSize: 13, opacity: 0.9 }}>{user.name}</span>
             <button
               onClick={() => {
                 logout();
