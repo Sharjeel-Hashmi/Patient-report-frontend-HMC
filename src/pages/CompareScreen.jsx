@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
-import { FiCopy, FiPrinter, FiCheck } from "react-icons/fi";
+import { useParams, useSearchParams, useNavigate } from "react-router-dom";
+import { FiCopy, FiPrinter, FiCheck, FiArrowLeft } from "react-icons/fi";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import RangeStrip from "../components/RangeStrip";
@@ -12,6 +12,7 @@ import { buildCompareCopyText } from "../utils/copyFormat";
 
 export default function CompareScreen() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [patient, setPatient] = useState(null);
   const [error, setError] = useState("");
@@ -39,7 +40,7 @@ export default function CompareScreen() {
   if (sortedReports.length < 2) {
     return (
       <div style={s.page}>
-        <Header title="Compare Reports" showBack />
+        <Header title="Compare Reports" showBack onBack={() => navigate(`/patients/${id}`)} />
         <div style={s.container}>
           <div style={{ ...s.card, textAlign: "center", color: theme.textMuted }}>
             At least 2 reports are needed to compare.
@@ -76,15 +77,23 @@ export default function CompareScreen() {
 
   return (
     <div style={s.page}>
-      <Header title={`Compare — ${patient.name}`} showBack />
+      <Header title={`Compare — ${patient.name}`} showBack onBack={() => navigate(`/patients/${id}`)} />
       <div style={s.container}>
         <div style={{ ...s.card, marginBottom: 20 }}>
+          <div style={{ marginBottom: 16 }} className="no-print">
+            <button
+              style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 6 }}
+              onClick={() => navigate(`/patients/${id}`)}
+            >
+              <FiArrowLeft size={14} />Back
+            </button>
+          </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }} className="no-print">
             <div>
               <label style={s.label}>Previous Report (P)</label>
               <select style={s.input} value={prevReport._id} onChange={(e) => handleSelect("a", e.target.value)}>
                 {sortedReports.map((r) => (
-                  <option key={r._id} value={r._id}>{new Date(r.date).toLocaleDateString('en-IE')} — {r.labName || "No lab"}</option>
+                  <option key={r._id} value={r._id}>{new Date(r.date).toLocaleDateString()} — {r.labName || "No lab"}</option>
                 ))}
               </select>
             </div>
@@ -92,7 +101,7 @@ export default function CompareScreen() {
               <label style={s.label}>Recent Report (R)</label>
               <select style={s.input} value={currReport._id} onChange={(e) => handleSelect("b", e.target.value)}>
                 {sortedReports.map((r) => (
-                  <option key={r._id} value={r._id}>{new Date(r.date).toLocaleDateString('en-IE')} — {r.labName || "No lab"}</option>
+                  <option key={r._id} value={r._id}>{new Date(r.date).toLocaleDateString()} — {r.labName || "No lab"}</option>
                 ))}
               </select>
             </div>
@@ -149,8 +158,8 @@ export default function CompareScreen() {
               <thead>
                 <tr style={{ textAlign: "left", borderBottom: `2px solid ${theme.border}` }}>
                   <th style={{ padding: "10px 8px" }}>Parameter</th>
-                  <th style={{ padding: "10px 8px" }}>Previous ({new Date(prevReport.date).toLocaleDateString('en-IE')})</th>
-                  <th style={{ padding: "10px 8px" }}>Recent ({new Date(currReport.date).toLocaleDateString('en-IE')})</th>
+                  <th style={{ padding: "10px 8px" }}>Previous ({new Date(prevReport.date).toLocaleDateString()})</th>
+                  <th style={{ padding: "10px 8px" }}>Recent ({new Date(currReport.date).toLocaleDateString()})</th>
                   <th style={{ padding: "10px 8px" }}>Change</th>
                   {/* Status columns available below — commented out per current design, uncomment to re-enable
                   <th style={{ padding: "10px 8px" }}>Prev Status</th>

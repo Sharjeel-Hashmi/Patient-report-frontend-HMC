@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { FiEdit2, FiTrash2, FiPlus, FiEye, FiZap, FiRepeat, FiArrowRight, FiGitCommit, FiArrowLeft } from "react-icons/fi";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import ConfirmModal from "../components/ConfirmModal";
 import { api } from "../api/api";
 import { theme } from "../theme";
 import { s } from "../styles";
@@ -14,6 +15,8 @@ export default function PatientScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showEdit, setShowEdit] = useState(false);
+  const [confirmDeletePatient, setConfirmDeletePatient] = useState(false);
+  const [confirmDeleteReportId, setConfirmDeleteReportId] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -31,23 +34,25 @@ export default function PatientScreen() {
     load();
   }, [load]);
 
-  const handleDeletePatient = async () => {
-    if (!window.confirm(`Delete patient "${patient.name}"? This cannot be undone.`)) return;
+  const confirmDeletePatientAction = async () => {
     try {
       await api.deletePatient(id);
       navigate("/");
     } catch (err) {
       alert(err.message);
+    } finally {
+      setConfirmDeletePatient(false);
     }
   };
 
-  const handleDeleteReport = async (reportId) => {
-    if (!window.confirm("Delete this report?")) return;
+  const confirmDeleteReportAction = async () => {
     try {
-      const updated = await api.deleteReport(id, reportId);
+      const updated = await api.deleteReport(id, confirmDeleteReportId);
       setPatient(updated);
     } catch (err) {
       alert(err.message);
+    } finally {
+      setConfirmDeleteReportId(null);
     }
   };
 
@@ -73,7 +78,7 @@ export default function PatientScreen() {
           <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
             <button style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 6 }} onClick={() => navigate("/")}><FiArrowLeft size={14} />Back</button>
             <button style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 6 }} onClick={() => setShowEdit(true)}><FiEdit2 size={14} />Edit</button>
-            <button style={{ ...s.btnDanger, display: "flex", alignItems: "center", gap: 6 }} onClick={handleDeletePatient}><FiTrash2 size={14} />Delete</button>
+            <button style={{ ...s.btnDanger, display: "flex", alignItems: "center", gap: 6 }} onClick={() => setConfirmDeletePatient(true)}><FiTrash2 size={14} />Delete</button>
           </div>
         </div>
 
@@ -123,7 +128,7 @@ export default function PatientScreen() {
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   <button style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 5 }} onClick={() => navigate(`/patients/${id}/reports/${r._id}`)}><FiEye size={13} />View</button>
                   <button style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 5 }} onClick={() => navigate(`/patients/${id}/reports/${r._id}/edit`)}><FiEdit2 size={13} />Edit</button>
-                  <button style={{ ...s.btnDanger, display: "flex", alignItems: "center", gap: 5 }} onClick={() => handleDeleteReport(r._id)}><FiTrash2 size={13} />Delete</button>
+                  <button style={{ ...s.btnDanger, display: "flex", alignItems: "center", gap: 5 }} onClick={() => setConfirmDeleteReportId(r._id)}><FiTrash2 size={13} />Delete</button>
                 </div>
               </div>
             ))}
@@ -140,6 +145,20 @@ export default function PatientScreen() {
       </div>
       <Footer />
       {showEdit && <EditPatientModal patient={patient} onClose={() => setShowEdit(false)} onSaved={load} />}
+      {confirmDeletePatient && (
+        <ConfirmModal
+          message={`Are you sure you want to delete patient "${patient.name}"? This cannot be undone.`}
+          onConfirm={confirmDeletePatientAction}
+          onCancel={() => setConfirmDeletePatient(false)}
+        />
+      )}
+      {confirmDeleteReportId && (
+        <ConfirmModal
+          message="Are you sure you want to delete this report? This cannot be undone."
+          onConfirm={confirmDeleteReportAction}
+          onCancel={() => setConfirmDeleteReportId(null)}
+        />
+      )}
     </div>
   );
 }

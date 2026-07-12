@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FiSave, FiX, FiList } from "react-icons/fi";
+import { FiSave, FiX, FiList, FiArrowLeft } from "react-icons/fi";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { api } from "../api/api";
@@ -92,9 +92,18 @@ export default function ReportFormScreen() {
 
   return (
     <div style={s.page}>
-      <Header title={isEdit ? "Edit Report" : "Add Report"} showBack />
+      <Header title={isEdit ? "Edit Report" : "Add Report"} showBack onBack={() => navigate(`/patients/${id}`)} />
       <div style={s.container}>
         <div style={s.card}>
+          <div style={{ marginBottom: 16 }}>
+            <button
+              type="button"
+              style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 6 }}
+              onClick={() => navigate(`/patients/${id}`)}
+            >
+              <FiArrowLeft size={14} />Back
+            </button>
+          </div>
           {error && <div style={s.error}>{error}</div>}
           <form onSubmit={handleSubmit}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }}>
@@ -190,7 +199,7 @@ export default function ReportFormScreen() {
             </div>
 
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-              <button type="button" style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 6 }} onClick={() => navigate(-1)}>
+              <button type="button" style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 6 }} onClick={() => navigate(`/patients/${id}`)}>
                 <FiX /> Cancel
               </button>
               <button type="submit" disabled={saving} style={{ ...s.btnPrimary, display: "flex", alignItems: "center", gap: 6 }}>

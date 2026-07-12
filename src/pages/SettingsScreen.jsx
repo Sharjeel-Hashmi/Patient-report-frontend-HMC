@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { FiArrowLeft } from "react-icons/fi";
 import Header from "../components/Header";
+import ConfirmModal from "../components/ConfirmModal";
 import Footer from "../components/Footer";
 import { api } from "../api/api";
 import { useAuth } from "../AuthContext";
@@ -7,6 +10,7 @@ import { theme } from "../theme";
 import { s } from "../styles";
 
 export default function SettingsScreen() {
+  const navigate = useNavigate();
   const { user, updateStoredUser } = useAuth();
   const [labs, setLabs] = useState([]);
 
@@ -16,8 +20,13 @@ export default function SettingsScreen() {
 
   return (
     <div style={s.page}>
-      <Header title="Settings" showBack />
+      <Header title="Settings" showBack onBack={() => navigate("/")} />
       <div style={s.container}>
+        <div style={{ marginBottom: 16 }}>
+          <button style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 6 }} onClick={() => navigate("/")}>
+            <FiArrowLeft size={14} />Back
+          </button>
+        </div>
         <div style={{ display: "grid", gap: 20 }}>
           <ChangeEmailCard user={user} updateStoredUser={updateStoredUser} />
           <ChangePasswordCard />
@@ -126,6 +135,7 @@ function ChangePasswordCard() {
 function ManageLabsCard({ labs, setLabs }) {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
+  const [confirmDeleteLabId, setConfirmDeleteLabId] = useState(null);
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -140,13 +150,14 @@ function ManageLabsCard({ labs, setLabs }) {
     }
   };
 
-  const handleDelete = async (labId) => {
-    if (!window.confirm("Delete this lab?")) return;
+  const confirmDeleteLabAction = async () => {
     try {
-      await api.deleteLab(labId);
-      setLabs((prev) => prev.filter((l) => l._id !== labId));
+      await api.deleteLab(confirmDeleteLabId);
+      setLabs((prev) => prev.filter((l) => l._id !== confirmDeleteLabId));
     } catch (err) {
       alert(err.message);
+    } finally {
+      setConfirmDeleteLabId(null);
     }
   };
 
@@ -165,10 +176,17 @@ function ManageLabsCard({ labs, setLabs }) {
           {labs.map((lab) => (
             <div key={lab._id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", borderRadius: 8, border: `1px solid ${theme.border}` }}>
               <span>{lab.name}</span>
-              <button style={{ ...s.btnDanger, padding: "5px 12px", fontSize: 12 }} onClick={() => handleDelete(lab._id)}>Remove</button>
+              <button style={{ ...s.btnDanger, padding: "5px 12px", fontSize: 12 }} onClick={() => setConfirmDeleteLabId(lab._id)}>Remove</button>
             </div>
           ))}
         </div>
+      )}
+      {confirmDeleteLabId && (
+        <ConfirmModal
+          message="Are you sure you want to delete this lab?"
+          onConfirm={confirmDeleteLabAction}
+          onCancel={() => setConfirmDeleteLabId(null)}
+        />
       )}
     </div>
   );

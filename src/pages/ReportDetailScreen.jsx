@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FiCopy, FiPrinter, FiEdit2, FiCheck } from "react-icons/fi";
+import { FiCopy, FiPrinter, FiEdit2, FiCheck, FiArrowLeft } from "react-icons/fi";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import StatusBadge from "../components/StatusBadge";
@@ -43,15 +43,18 @@ export default function ReportDetailScreen() {
 
   return (
     <div style={s.page}>
-      <Header title={patient.name} showBack />
+      <Header title={patient.name} showBack onBack={() => navigate(`/patients/${id}`)} />
       <div style={s.container} className="print-area">
         <div style={{ ...s.card, marginBottom: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
             <div>
-              <div style={s.h1}>Report — {new Date(report.date).toLocaleDateString('en-IE')}</div>
+              <div style={s.h1}>Report — {new Date(report.date).toLocaleDateString()}</div>
               <div style={s.muted}>{report.labName || "Lab not specified"}</div>
             </div>
             <div style={{ display: "flex", gap: 10 }} className="no-print">
+              <button style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 6 }} onClick={() => navigate(`/patients/${id}`)}>
+                <FiArrowLeft size={14} />Back
+              </button>
               <button style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 6 }} onClick={handleCopy}>
                 {copied ? <><FiCheck /> Copied</> : <><FiCopy /> Copy Values</>}
               </button>
