@@ -48,7 +48,7 @@ export default function Home() {
   return (
     <div style={s.page}>
       <Header
-        title="Patients"
+        title="Doctor's Dashboard"
         right={
           <button onClick={() => setShowAddModal(true)} style={{ ...s.btnPrimary, background: "rgba(255,255,255,0.95)", color: theme.primary, display: "flex", alignItems: "center", gap: 6 }}>
             <FiPlus size={15} /> Add Patient
