@@ -5,6 +5,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Home from "./pages/Home";
+import DashboardScreen from "./pages/DashboardScreen";
 import PatientScreen from "./pages/PatientScreen";
 import ReportFormScreen from "./pages/ReportFormScreen";
 import ReportDetailScreen from "./pages/ReportDetailScreen";
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/signup" element={<Signup />} />
 
           <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><DashboardScreen /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><SettingsScreen /></ProtectedRoute>} />
 
           <Route path="/patients/:id" element={<ProtectedRoute><PatientScreen /></ProtectedRoute>} />

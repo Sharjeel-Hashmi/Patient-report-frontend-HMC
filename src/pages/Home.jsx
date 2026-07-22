@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiPlus, FiX, FiUsers, FiFileText, FiSearch, FiCalendar, FiChevronRight, FiChevronLeft } from "react-icons/fi";
+import { FiPlus, FiX, FiUsers, FiFileText, FiSearch, FiCalendar, FiChevronRight, FiChevronLeft, FiBarChart2 } from "react-icons/fi";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { api } from "../api/api";
@@ -62,9 +62,14 @@ export default function Home() {
       <Header
         title="Patients"
         right={
-          <button onClick={() => setShowAddModal(true)} style={{ ...s.btnPrimary, background: "rgba(255,255,255,0.95)", color: theme.primary, display: "flex", alignItems: "center", gap: 6 }}>
-            <FiPlus size={15} /> Add Patient
-          </button>
+          <>
+            <button onClick={() => navigate("/dashboard")} style={{ ...s.btnOutline, background: "rgba(255,255,255,0.95)", display: "flex", alignItems: "center", gap: 6 }}>
+              <FiBarChart2 size={15} /> Dashboard
+            </button>
+            <button onClick={() => setShowAddModal(true)} style={{ ...s.btnPrimary, background: "rgba(255,255,255,0.95)", color: theme.primary, display: "flex", alignItems: "center", gap: 6 }}>
+              <FiPlus size={15} /> Add Patient
+            </button>
+          </>
         }
       />
       <div style={s.container}>

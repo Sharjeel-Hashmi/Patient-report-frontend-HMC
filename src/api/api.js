@@ -62,6 +62,9 @@ export const api = {
   getLabs: () => request("/labs"),
   createLab: (name) => request("/labs", { method: "POST", body: JSON.stringify({ name }) }),
   deleteLab: (id) => request(`/labs/${id}`, { method: "DELETE" }),
+
+  // Dashboard
+  getDashboardStats: () => request("/dashboard"),
 };
 
 export { getToken };
