@@ -20,8 +20,8 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
-          <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-          <Route path="/dashboard" element={<ProtectedRoute><DashboardScreen /></ProtectedRoute>} />
+          <Route path="/" element={<ProtectedRoute><DashboardScreen /></ProtectedRoute>} />
+          <Route path="/patients" element={<ProtectedRoute><Home /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><SettingsScreen /></ProtectedRoute>} />
 
           <Route path="/patients/:id" element={<ProtectedRoute><PatientScreen /></ProtectedRoute>} />

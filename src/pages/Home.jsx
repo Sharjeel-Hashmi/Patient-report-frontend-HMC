@@ -61,15 +61,12 @@ export default function Home() {
     <div style={s.page}>
       <Header
         title="Patients"
+        showBack
+        onBack={() => navigate("/")}
         right={
-          <>
-            <button onClick={() => navigate("/dashboard")} style={{ ...s.btnOutline, background: "rgba(255,255,255,0.95)", display: "flex", alignItems: "center", gap: 6 }}>
-              <FiBarChart2 size={15} /> Dashboard
-            </button>
-            <button onClick={() => setShowAddModal(true)} style={{ ...s.btnPrimary, background: "rgba(255,255,255,0.95)", color: theme.primary, display: "flex", alignItems: "center", gap: 6 }}>
-              <FiPlus size={15} /> Add Patient
-            </button>
-          </>
+          <button onClick={() => setShowAddModal(true)} style={{ ...s.btnPrimary, background: "rgba(255,255,255,0.95)", color: theme.primary, display: "flex", alignItems: "center", gap: 6 }}>
+            <FiPlus size={15} /> Add Patient
+          </button>
         }
       />
       <div style={s.container}>

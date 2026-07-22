@@ -64,7 +64,7 @@ export default function DashboardScreen() {
   if (error) {
     return (
       <div style={s.page}>
-        <Header title="Dashboard" showBack onBack={() => navigate("/")} />
+        <Header title="Dashboard" />
         <div style={s.container}>
           <div style={s.error}>{error}</div>
         </div>
@@ -76,7 +76,7 @@ export default function DashboardScreen() {
   if (!stats) {
     return (
       <div style={s.page}>
-        <Header title="Dashboard" showBack onBack={() => navigate("/")} />
+        <Header title="Dashboard" />
         <div style={s.container}>
           <div style={s.muted}>Loading dashboard...</div>
         </div>
@@ -92,7 +92,17 @@ export default function DashboardScreen() {
 
   return (
     <div style={s.page}>
-      <Header title="Dashboard" showBack onBack={() => navigate("/")} />
+      <Header
+        title="Dashboard"
+        right={
+          <button
+            onClick={() => navigate("/patients")}
+            style={{ ...s.btnPrimary, background: "rgba(255,255,255,0.95)", color: theme.primary, display: "flex", alignItems: "center", gap: 6 }}
+          >
+            <FiUsers size={15} /> View Patients
+          </button>
+        }
+      />
       <div style={s.container}>
         {/* Basic Stats */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 20 }}>

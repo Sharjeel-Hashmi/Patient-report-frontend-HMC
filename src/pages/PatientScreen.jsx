@@ -37,7 +37,7 @@ export default function PatientScreen() {
   const confirmDeletePatientAction = async () => {
     try {
       await api.deletePatient(id);
-      navigate("/");
+      navigate("/patients");
     } catch (err) {
       alert(err.message);
     } finally {
@@ -64,7 +64,7 @@ export default function PatientScreen() {
 
   return (
     <div style={s.page}>
-      <Header title={patient.name} showBack onBack={() => navigate("/")} />
+      <Header title={patient.name} showBack onBack={() => navigate("/patients")} />
       <div style={s.container}>
         <div style={{ ...s.card, marginBottom: 20, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
           <div>
@@ -76,7 +76,7 @@ export default function PatientScreen() {
             {patient.address && <div style={{ ...s.muted, marginTop: 4 }}>{patient.address}</div>}
           </div>
           <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-            <button style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 6 }} onClick={() => navigate("/")}><FiArrowLeft size={14} />Back</button>
+            <button style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 6 }} onClick={() => navigate("/patients")}><FiArrowLeft size={14} />Back</button>
             <button style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 6 }} onClick={() => setShowEdit(true)}><FiEdit2 size={14} />Edit</button>
             <button style={{ ...s.btnDanger, display: "flex", alignItems: "center", gap: 6 }} onClick={() => setConfirmDeletePatient(true)}><FiTrash2 size={14} />Delete</button>
           </div>
