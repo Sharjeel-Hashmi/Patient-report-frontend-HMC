@@ -22,6 +22,7 @@ export default function ConsultationFormScreen() {
   const [conditions, setConditions] = useState([]);
   const [medications, setMedications] = useState([]);
   const [reports, setReports] = useState([]);
+  const [patientGender, setPatientGender] = useState("");
 
   const [visitType, setVisitType] = useState("");
   const [condition, setCondition] = useState("");
@@ -61,6 +62,7 @@ export default function ConsultationFormScreen() {
         setConditions(cond);
         setMedications(meds);
         setReports([...patient.reports].sort((a, b) => new Date(b.date) - new Date(a.date)));
+        setPatientGender(patient.gender || "");
 
         if (isEdit) {
           const c = await api.getConsultation(id, consultationId);
@@ -109,6 +111,7 @@ export default function ConsultationFormScreen() {
   const selectedConditionName = (conditions.find((c) => c._id === condition)?.name || "").toLowerCase();
   const isNewPatientVisit = selectedVisitTypeName.includes("new patient");
   const isHashimotos = selectedConditionName.includes("hashimoto");
+  const pronoun = patientGender === "Male" ? "He" : patientGender === "Female" ? "She" : "He/She";
 
   const updatePrescriptionRow = (index, field, value) => {
     setPrescriptions((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
@@ -216,11 +219,11 @@ export default function ConsultationFormScreen() {
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }}>
               <div>
-                <label style={s.label}>She is taking</label>
+                <label style={s.label}>{pronoun} is taking</label>
                 <input style={s.input} value={currentlyTaking} onChange={(e) => setCurrentlyTaking(e.target.value)} />
               </div>
               <div>
-                <label style={s.label}>She is feeling</label>
+                <label style={s.label}>{pronoun} is feeling</label>
                 <input style={s.input} value={feeling} onChange={(e) => setFeeling(e.target.value)} />
               </div>
             </div>
