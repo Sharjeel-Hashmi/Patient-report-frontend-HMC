@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FiEdit2, FiTrash2, FiPlus, FiEye, FiZap, FiRepeat, FiArrowRight, FiGitCommit, FiArrowLeft } from "react-icons/fi";
+import { FiEdit2, FiTrash2, FiPlus, FiEye, FiZap, FiRepeat, FiArrowRight, FiGitCommit, FiArrowLeft, FiClipboard } from "react-icons/fi";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import ConfirmModal from "../components/ConfirmModal";
@@ -12,17 +12,23 @@ export default function PatientScreen() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [patient, setPatient] = useState(null);
+  const [consultations, setConsultations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showEdit, setShowEdit] = useState(false);
   const [confirmDeletePatient, setConfirmDeletePatient] = useState(false);
   const [confirmDeleteReportId, setConfirmDeleteReportId] = useState(null);
+  const [confirmDeleteConsultationId, setConfirmDeleteConsultationId] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await api.getPatient(id);
+      const [data, consultationData] = await Promise.all([
+        api.getPatient(id),
+        api.getConsultations(id).catch(() => []),
+      ]);
       setPatient(data);
+      setConsultations(consultationData);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -53,6 +59,17 @@ export default function PatientScreen() {
       alert(err.message);
     } finally {
       setConfirmDeleteReportId(null);
+    }
+  };
+
+  const confirmDeleteConsultationAction = async () => {
+    try {
+      await api.deleteConsultation(id, confirmDeleteConsultationId);
+      setConsultations((prev) => prev.filter((c) => c._id !== confirmDeleteConsultationId));
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setConfirmDeleteConsultationId(null);
     }
   };
 
@@ -142,6 +159,33 @@ export default function PatientScreen() {
             </button>
           </div>
         )}
+
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "28px 0 12px" }}>
+          <div style={s.h2}>Consultations ({consultations.length})</div>
+          <button style={{ ...s.btnPrimary, display: "flex", alignItems: "center", gap: 6 }} onClick={() => navigate(`/patients/${id}/consultations/new`)}><FiPlus size={15} />Add Consultation</button>
+        </div>
+
+        {consultations.length === 0 ? (
+          <div style={{ ...s.card, textAlign: "center", color: theme.textMuted }}>No consultations recorded yet.</div>
+        ) : (
+          <div style={{ display: "grid", gap: 10 }}>
+            {consultations.map((c) => (
+              <div key={c._id} style={{ ...s.card, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+                <div style={{ cursor: "pointer", flex: 1 }} onClick={() => navigate(`/patients/${id}/consultations/${c._id}`)}>
+                  <div style={{ fontWeight: 700, color: theme.text, display: "flex", alignItems: "center", gap: 8 }}>
+                    <FiClipboard size={14} />{new Date(c.date).toLocaleDateString()}
+                  </div>
+                  <div style={s.muted}>{c.visitTypeName} · {c.conditionName}</div>
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <button style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 5 }} onClick={() => navigate(`/patients/${id}/consultations/${c._id}`)}><FiEye size={13} />View</button>
+                  <button style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 5 }} onClick={() => navigate(`/patients/${id}/consultations/${c._id}/edit`)}><FiEdit2 size={13} />Edit</button>
+                  <button style={{ ...s.btnDanger, display: "flex", alignItems: "center", gap: 5 }} onClick={() => setConfirmDeleteConsultationId(c._id)}><FiTrash2 size={13} />Delete</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       <Footer />
       {showEdit && <EditPatientModal patient={patient} onClose={() => setShowEdit(false)} onSaved={load} />}
@@ -157,6 +201,13 @@ export default function PatientScreen() {
           message="Are you sure you want to delete this report? This cannot be undone."
           onConfirm={confirmDeleteReportAction}
           onCancel={() => setConfirmDeleteReportId(null)}
+        />
+      )}
+      {confirmDeleteConsultationId && (
+        <ConfirmModal
+          message="Are you sure you want to delete this consultation? This cannot be undone."
+          onConfirm={confirmDeleteConsultationAction}
+          onCancel={() => setConfirmDeleteConsultationId(null)}
         />
       )}
     </div>

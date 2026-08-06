@@ -11,6 +11,8 @@ import ReportFormScreen from "./pages/ReportFormScreen";
 import ReportDetailScreen from "./pages/ReportDetailScreen";
 import CompareScreen from "./pages/CompareScreen";
 import SettingsScreen from "./pages/SettingsScreen";
+import ConsultationFormScreen from "./pages/ConsultationFormScreen";
+import ConsultationDetailScreen from "./pages/ConsultationDetailScreen";
 
 export default function App() {
   return (
@@ -29,6 +31,10 @@ export default function App() {
           <Route path="/patients/:id/reports/:reportId" element={<ProtectedRoute><ReportDetailScreen /></ProtectedRoute>} />
           <Route path="/patients/:id/reports/:reportId/edit" element={<ProtectedRoute><ReportFormScreen /></ProtectedRoute>} />
           <Route path="/patients/:id/compare" element={<ProtectedRoute><CompareScreen /></ProtectedRoute>} />
+
+          <Route path="/patients/:id/consultations/new" element={<ProtectedRoute><ConsultationFormScreen /></ProtectedRoute>} />
+          <Route path="/patients/:id/consultations/:consultationId" element={<ProtectedRoute><ConsultationDetailScreen /></ProtectedRoute>} />
+          <Route path="/patients/:id/consultations/:consultationId/edit" element={<ProtectedRoute><ConsultationFormScreen /></ProtectedRoute>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

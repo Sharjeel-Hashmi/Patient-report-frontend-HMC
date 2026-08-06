@@ -65,6 +65,36 @@ export const api = {
 
   // Dashboard
   getDashboardStats: () => request("/dashboard"),
+
+  // Visit Types (master data)
+  getVisitTypes: () => request("/visit-types"),
+  createVisitType: (name) => request("/visit-types", { method: "POST", body: JSON.stringify({ name }) }),
+  updateVisitType: (id, payload) => request(`/visit-types/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
+  deleteVisitType: (id) => request(`/visit-types/${id}`, { method: "DELETE" }),
+
+  // Conditions (master data)
+  getConditions: () => request("/conditions"),
+  createCondition: (name) => request("/conditions", { method: "POST", body: JSON.stringify({ name }) }),
+  updateCondition: (id, payload) => request(`/conditions/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
+  deleteCondition: (id) => request(`/conditions/${id}`, { method: "DELETE" }),
+
+  // Medications (master data)
+  getMedications: () => request("/medications"),
+  createMedication: (name, dosages) =>
+    request("/medications", { method: "POST", body: JSON.stringify({ name, dosages }) }),
+  updateMedication: (id, payload) => request(`/medications/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
+  deleteMedication: (id) => request(`/medications/${id}`, { method: "DELETE" }),
+
+  // Consultations (nested under patient)
+  getConsultations: (patientId) => request(`/patients/${patientId}/consultations`),
+  getConsultation: (patientId, consultationId) =>
+    request(`/patients/${patientId}/consultations/${consultationId}`),
+  addConsultation: (patientId, payload) =>
+    request(`/patients/${patientId}/consultations`, { method: "POST", body: JSON.stringify(payload) }),
+  updateConsultation: (patientId, consultationId, payload) =>
+    request(`/patients/${patientId}/consultations/${consultationId}`, { method: "PUT", body: JSON.stringify(payload) }),
+  deleteConsultation: (patientId, consultationId) =>
+    request(`/patients/${patientId}/consultations/${consultationId}`, { method: "DELETE" }),
 };
 
 export { getToken };
