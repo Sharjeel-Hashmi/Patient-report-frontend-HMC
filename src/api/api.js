@@ -1,8 +1,50 @@
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const getToken = () => localStorage.getItem("hmc_token");
+const getRefreshToken = () => localStorage.getItem("hmc_refresh_token");
 
-async function request(endpoint, options = {}) {
+const setTokens = (accessToken, refreshToken) => {
+  if (accessToken) localStorage.setItem("hmc_token", accessToken);
+  if (refreshToken) localStorage.setItem("hmc_refresh_token", refreshToken);
+};
+
+const clearSession = () => {
+  localStorage.removeItem("hmc_token");
+  localStorage.removeItem("hmc_refresh_token");
+  localStorage.removeItem("hmc_user");
+};
+
+// Ensures only one /auth/refresh call is in-flight at a time — if several API
+// calls 401 at once (e.g. dashboard loading multiple things in parallel), they
+// all share the same refresh attempt instead of racing each other.
+let refreshPromise = null;
+
+async function performRefresh() {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) throw new Error("No refresh token");
+
+  const res = await fetch(`${API_URL}/auth/refresh`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refreshToken }),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(data?.message || "Session expired");
+
+  setTokens(data.accessToken, data.refreshToken);
+  return data.accessToken;
+}
+
+// Called when the refresh token itself is invalid/expired — session is truly
+// over, so clear everything and send the user back to login.
+function forceSessionExpired() {
+  clearSession();
+  if (window.location.pathname !== "/login") {
+    window.location.href = "/login";
+  }
+}
+
+async function request(endpoint, options = {}, isRetry = false) {
   const token = getToken();
   const headers = {
     "Content-Type": "application/json",
@@ -14,6 +56,20 @@ async function request(endpoint, options = {}) {
     ...options,
     headers,
   });
+
+  // Access token expired mid-session -> silently refresh once, then retry the
+  // original request. Auth endpoints themselves are excluded to avoid loops.
+  const isAuthEndpoint = endpoint.startsWith("/auth/");
+  if (res.status === 401 && !isRetry && !isAuthEndpoint) {
+    try {
+      if (!refreshPromise) refreshPromise = performRefresh().finally(() => { refreshPromise = null; });
+      await refreshPromise;
+      return request(endpoint, options, true);
+    } catch {
+      forceSessionExpired();
+      throw new Error("Session expired, please log in again");
+    }
+  }
 
   let data;
   try {
@@ -39,6 +95,15 @@ export const api = {
     request("/auth/change-email", { method: "PUT", body: JSON.stringify({ newEmail, password }) }),
   changePassword: (currentPassword, newPassword) =>
     request("/auth/change-password", { method: "PUT", body: JSON.stringify({ currentPassword, newPassword }) }),
+  logout: () => {
+    const refreshToken = getRefreshToken();
+    // Best-effort — even if this fails (offline etc.), local session is cleared by AuthContext regardless.
+    return fetch(`${API_URL}/auth/logout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    }).catch(() => {});
+  },
 
   // Patients
   getPatients: (params = {}) => {

@@ -35,7 +35,7 @@ export default function SettingsScreen() {
         </div>
         <div style={{ display: "grid", gap: 20 }}>
           <ChangeEmailCard user={user} updateStoredUser={updateStoredUser} />
-          <ChangePasswordCard />
+          <ChangePasswordCard user={user} updateStoredUser={updateStoredUser} />
           <ManageLabsCard labs={labs} setLabs={setLabs} />
           <ManageSimpleListCard
             title="Manage Consultation Types"
@@ -75,7 +75,7 @@ function ChangeEmailCard({ user, updateStoredUser }) {
     setSaving(true);
     try {
       const data = await api.changeEmail(newEmail, password);
-      updateStoredUser(data.user, data.token);
+      updateStoredUser(data.user, data.accessToken, data.refreshToken);
       setSuccess("Email updated successfully.");
       setNewEmail("");
       setPassword("");
@@ -109,7 +109,7 @@ function ChangeEmailCard({ user, updateStoredUser }) {
   );
 }
 
-function ChangePasswordCard() {
+function ChangePasswordCard({ user, updateStoredUser }) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [error, setError] = useState("");
@@ -122,7 +122,10 @@ function ChangePasswordCard() {
     setSuccess("");
     setSaving(true);
     try {
-      await api.changePassword(currentPassword, newPassword);
+      const data = await api.changePassword(currentPassword, newPassword);
+      // Password change rotates the refresh token server-side — store the newly
+      // issued pair so this session keeps working without an unexpected logout.
+      updateStoredUser(user, data.accessToken, data.refreshToken);
       setSuccess("Password updated successfully.");
       setCurrentPassword("");
       setNewPassword("");

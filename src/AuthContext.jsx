@@ -18,7 +18,8 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const data = await api.login(email, password);
-    localStorage.setItem("hmc_token", data.token);
+    localStorage.setItem("hmc_token", data.accessToken);
+    localStorage.setItem("hmc_refresh_token", data.refreshToken);
     localStorage.setItem("hmc_user", JSON.stringify(data.user));
     setUser(data.user);
     return data;
@@ -26,20 +27,24 @@ export function AuthProvider({ children }) {
 
   const signup = async (name, email, password) => {
     const data = await api.signup(name, email, password);
-    localStorage.setItem("hmc_token", data.token);
+    localStorage.setItem("hmc_token", data.accessToken);
+    localStorage.setItem("hmc_refresh_token", data.refreshToken);
     localStorage.setItem("hmc_user", JSON.stringify(data.user));
     setUser(data.user);
     return data;
   };
 
   const logout = () => {
+    api.logout(); // best-effort server-side refresh token revoke, fire-and-forget
     localStorage.removeItem("hmc_token");
+    localStorage.removeItem("hmc_refresh_token");
     localStorage.removeItem("hmc_user");
     setUser(null);
   };
 
-  const updateStoredUser = (updatedUser, newToken) => {
-    if (newToken) localStorage.setItem("hmc_token", newToken);
+  const updateStoredUser = (updatedUser, newAccessToken, newRefreshToken) => {
+    if (newAccessToken) localStorage.setItem("hmc_token", newAccessToken);
+    if (newRefreshToken) localStorage.setItem("hmc_refresh_token", newRefreshToken);
     localStorage.setItem("hmc_user", JSON.stringify(updatedUser));
     setUser(updatedUser);
   };
