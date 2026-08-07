@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FiEdit2, FiTrash2, FiArrowLeft, FiPrinter, FiCheckCircle, FiXCircle } from "react-icons/fi";
+import { FiEdit2, FiTrash2, FiArrowLeft, FiPrinter, FiCheckCircle, FiXCircle, FiCopy, FiCheck } from "react-icons/fi";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import ConfirmModal from "../components/ConfirmModal";
+import StatusBadge from "../components/StatusBadge";
 import { api } from "../api/api";
-import { theme } from "../theme";
+import { theme, RANGES, getStatus } from "../theme";
 import { s } from "../styles";
+import { buildConsultationCopyText } from "../utils/copyFormat";
 
 function Row({ label, value }) {
   if (value === undefined || value === null || value === "") return null;
@@ -26,6 +28,7 @@ export default function ConsultationDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -52,6 +55,14 @@ export default function ConsultationDetailScreen() {
     }
   };
 
+  const handleCopy = () => {
+    if (!consultation || !patient) return;
+    const text = buildConsultationCopyText(consultation, patient.name);
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   if (loading) return <div style={s.page}><Header title="Consultation" showBack /><div style={s.container}><div style={s.muted}>Loading...</div></div></div>;
   if (error || !consultation) return <div style={s.page}><Header title="Consultation" showBack /><div style={s.container}><div style={s.error}>{error || "Consultation not found"}</div></div></div>;
 
@@ -71,7 +82,10 @@ export default function ConsultationDetailScreen() {
           <button style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 6 }} onClick={() => navigate(`/patients/${id}`)}>
             <FiArrowLeft size={14} />Back
           </button>
-          <div style={{ display: "flex", gap: 10 }}>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <button style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 6 }} onClick={handleCopy}>
+              {copied ? <><FiCheck size={14} />Copied</> : <><FiCopy size={14} />Copy</>}
+            </button>
             <button style={{ ...s.btnOutline, display: "flex", alignItems: "center", gap: 6 }} onClick={() => window.print()}>
               <FiPrinter size={14} />Print
             </button>
@@ -98,16 +112,46 @@ export default function ConsultationDetailScreen() {
             <Row label="Currently Taking" value={consultation.currentlyTaking} />
             <Row label="Feeling" value={consultation.feeling} />
             <Row label="SSS Score" value={consultation.sssScore} />
-            {linkedReport && (
-              <Row
-                label="Linked Blood Test"
-                value={`${new Date(linkedReport.date).toLocaleDateString()} — TSH ${linkedReport.tsh ?? "—"}, T4 ${linkedReport.t4 ?? "—"}, T3 ${linkedReport.t3 ?? "—"}, Anti-TPO ${linkedReport.antiTpo ?? "—"}, Anti-TG ${linkedReport.antiTg ?? "—"}`}
-              />
-            )}
             <Row label="Ultrasound (U/S) Notes" value={consultation.ultrasoundNotes} />
             <Row label="Allergy" value={consultation.allergy} />
             <Row label="Medicines (current)" value={consultation.currentMedicines} />
           </div>
+
+          {linkedReport && (
+            <>
+              <div style={s.h2}>Linked Blood Test — {new Date(linkedReport.date).toLocaleDateString()}</div>
+              <div style={{ display: "grid", gap: 10, marginBottom: 20 }}>
+                {Object.entries(RANGES).map(([key, range]) => {
+                  const value = linkedReport[key];
+                  const status = getStatus(key, value);
+                  return (
+                    <div
+                      key={key}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "12px 14px",
+                        borderRadius: 10,
+                        border: `1px solid ${theme.border}`,
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: 700, color: theme.text }}>{range.label}</div>
+                        <div style={{ fontSize: 12, color: theme.textMuted }}>Normal: {range.min}–{range.max} {range.unit}</div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ fontSize: 18, fontWeight: 800, color: theme.text }}>
+                          {value !== undefined && value !== null && value !== "" ? value : "—"}
+                        </div>
+                        <StatusBadge status={status} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
 
           <div style={s.h2}>O/E</div>
           <div style={{ marginBottom: 20 }}>

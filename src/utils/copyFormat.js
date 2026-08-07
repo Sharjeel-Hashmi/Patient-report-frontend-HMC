@@ -71,3 +71,76 @@ export function buildCompareCopyText(prevReport, currReport) {
 
   return lines.join("\n");
 }
+
+/**
+ * Builds aligned plain-text for a CONSULTATION note (Consultation Detail page copy).
+ * Deliberately EXCLUDES the linked blood test values — those belong to the Report
+ * itself and have their own copy button there; this keeps a consultation-note copy
+ * focused on the clinical note, not a duplicate of lab data.
+ * Uses a single TAB after "Label:" so it stays aligned in Word/WhatsApp/Gmail —
+ * never space-padding (see note above on why spaces break in proportional fonts).
+ */
+export function buildConsultationCopyText(consultation, patientName) {
+  const lines = [];
+  const push = (label, value) => {
+    if (value === undefined || value === null || value === "") return;
+    lines.push(`${label}:\t${value}`);
+  };
+
+  lines.push(`${patientName} — ${consultation.visitTypeName} · ${consultation.conditionName} · ${fmtDate(consultation.date)}`);
+  lines.push("");
+
+  push("Pt c/o", consultation.chiefComplaint);
+  push("Currently Taking", consultation.currentlyTaking);
+  push("Feeling", consultation.feeling);
+  push("SSS Score", consultation.sssScore);
+  push("Ultrasound (U/S) Notes", consultation.ultrasoundNotes);
+  push("Allergy", consultation.allergy);
+  push("Medicines (current)", consultation.currentMedicines);
+
+  const hasOE = consultation.bp || consultation.pulse || (consultation.spo2 !== undefined && consultation.spo2 !== null && consultation.spo2 !== "");
+  if (hasOE) {
+    lines.push("");
+    lines.push("O/E");
+    push("BP", consultation.bp);
+    push("Pulse", consultation.pulse);
+    push("SaO2", consultation.spo2 !== undefined && consultation.spo2 !== null && consultation.spo2 !== "" ? `${consultation.spo2}%` : "");
+  }
+
+  if (consultation.planNotes) {
+    lines.push("");
+    lines.push("Plan");
+    lines.push(consultation.planNotes);
+  }
+
+  lines.push("");
+  lines.push(`Written consent for non-licensed medicines: ${consultation.consentGiven ? "Given" : "Not recorded"}`);
+
+  if (consultation.prescriptions && consultation.prescriptions.length > 0) {
+    lines.push("");
+    lines.push("Prescription");
+    consultation.prescriptions.forEach((p) => {
+      const parts = [p.medicationName, p.dosage].filter(Boolean).join(" — ");
+      lines.push(p.instructions ? `${parts} (${p.instructions})` : parts);
+    });
+  }
+
+  lines.push("");
+  push("Dietary Restrictions", consultation.dietaryRestrictions);
+
+  const supplementLabels = [];
+  if (consultation.supplements?.zinc) supplementLabels.push("Zn");
+  if (consultation.supplements?.selenium) supplementLabels.push("Selenium");
+  if (consultation.supplements?.vitD3K2) supplementLabels.push("Vit D3 / K2");
+  if (consultation.supplements?.custom) supplementLabels.push(consultation.supplements.custom);
+  push("Nutritional Supplements", supplementLabels.join(", "));
+
+  push("Immune Modulation", consultation.immuneModulation);
+
+  if (consultation.reviewAfter) {
+    lines.push("");
+    push("R/V after", consultation.reviewAfter);
+  }
+
+  return lines.join("\n");
+}
