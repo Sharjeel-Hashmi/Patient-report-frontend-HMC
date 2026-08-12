@@ -3,8 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { FiSave, FiX, FiArrowLeft, FiPlus, FiTrash2 } from "react-icons/fi";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import LinkedReportsPicker from "../components/LinkedReportsPicker";
 import { api } from "../api/api";
-import { theme } from "../theme";
+import { theme, FEELING_OPTIONS, SSS_MAX } from "../theme";
 import { s } from "../styles";
 
 const emptyPrescriptionRow = { medication: "", dosage: "", instructions: "" };
@@ -28,11 +29,13 @@ export default function ConsultationFormScreen() {
   const [condition, setCondition] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [chiefComplaint, setChiefComplaint] = useState("");
-  const [currentlyTaking, setCurrentlyTaking] = useState("");
+  const [currentlyTakingMeds, setCurrentlyTakingMeds] = useState([]); // array of medication ids
   const [feeling, setFeeling] = useState("");
   const [sssScore, setSssScore] = useState("");
-  const [linkedReport, setLinkedReport] = useState("");
-  const [ultrasoundNotes, setUltrasoundNotes] = useState("");
+  const [linkedReports, setLinkedReports] = useState([]); // array of report ids (0-2)
+  const [thyroidUSDone, setThyroidUSDone] = useState("");
+  const [ultrasoundNotes, setUltrasoundNotes] = useState(""); // Findings
+  const [referForThyroidUS, setReferForThyroidUS] = useState("");
   const [allergy, setAllergy] = useState("");
   const [currentMedicines, setCurrentMedicines] = useState("");
   const [bp, setBp] = useState("");
@@ -45,6 +48,7 @@ export default function ConsultationFormScreen() {
   const [zinc, setZinc] = useState(false);
   const [selenium, setSelenium] = useState(false);
   const [vitD3K2, setVitD3K2] = useState(false);
+  const [magnesium, setMagnesium] = useState(false);
   const [customSupplement, setCustomSupplement] = useState("");
   const [immuneModulation, setImmuneModulation] = useState("");
   const [reviewAfter, setReviewAfter] = useState("");
@@ -70,11 +74,20 @@ export default function ConsultationFormScreen() {
           setCondition(c.condition || "");
           setDate(c.date ? c.date.slice(0, 10) : new Date().toISOString().slice(0, 10));
           setChiefComplaint(c.chiefComplaint || "");
-          setCurrentlyTaking(c.currentlyTaking || "");
+          setCurrentlyTakingMeds(
+            c.currentlyTakingMeds && c.currentlyTakingMeds.length
+              ? c.currentlyTakingMeds.map((m) => m.medication).filter(Boolean)
+              : []
+          );
           setFeeling(c.feeling || "");
           setSssScore(c.sssScore ?? "");
-          setLinkedReport(c.linkedReport || "");
+          // Backward compat: older consultations only had a single `linkedReport`.
+          setLinkedReports(
+            c.linkedReports && c.linkedReports.length ? c.linkedReports : c.linkedReport ? [c.linkedReport] : []
+          );
+          setThyroidUSDone(c.thyroidUSDone || "");
           setUltrasoundNotes(c.ultrasoundNotes || "");
+          setReferForThyroidUS(c.referForThyroidUS || "");
           setAllergy(c.allergy || "");
           setCurrentMedicines(c.currentMedicines || "");
           setBp(c.bp || "");
@@ -91,6 +104,7 @@ export default function ConsultationFormScreen() {
           setZinc(Boolean(c.supplements?.zinc));
           setSelenium(Boolean(c.supplements?.selenium));
           setVitD3K2(Boolean(c.supplements?.vitD3K2));
+          setMagnesium(Boolean(c.supplements?.magnesium));
           setCustomSupplement(c.supplements?.custom || "");
           setImmuneModulation(c.immuneModulation || "");
           setReviewAfter(c.reviewAfter || "");
@@ -108,10 +122,12 @@ export default function ConsultationFormScreen() {
   }, [id, consultationId, isEdit]);
 
   const selectedVisitTypeName = (visitTypes.find((v) => v._id === visitType)?.name || "").toLowerCase();
-  const selectedConditionName = (conditions.find((c) => c._id === condition)?.name || "").toLowerCase();
   const isNewPatientVisit = selectedVisitTypeName.includes("new patient");
-  const isHashimotos = selectedConditionName.includes("hashimoto");
   const pronoun = patientGender === "Male" ? "He" : patientGender === "Female" ? "She" : "He/She";
+
+  const toggleCurrentlyTakingMed = (medId) => {
+    setCurrentlyTakingMeds((prev) => (prev.includes(medId) ? prev.filter((id) => id !== medId) : [...prev, medId]));
+  };
 
   const updatePrescriptionRow = (index, field, value) => {
     setPrescriptions((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
@@ -130,11 +146,13 @@ export default function ConsultationFormScreen() {
         condition,
         date,
         chiefComplaint,
-        currentlyTaking,
+        currentlyTakingMeds,
         feeling,
-        sssScore: sssScore === "" ? undefined : Number(sssScore),
-        linkedReport: linkedReport || null,
+        sssScore: sssScore === "" ? undefined : Math.min(SSS_MAX, Math.max(0, Number(sssScore))),
+        linkedReports,
+        thyroidUSDone,
         ultrasoundNotes,
+        referForThyroidUS,
         allergy,
         currentMedicines,
         bp,
@@ -144,7 +162,7 @@ export default function ConsultationFormScreen() {
         consentGiven,
         prescriptions: prescriptions.filter((p) => p.medication),
         dietaryRestrictions,
-        supplements: { zinc, selenium, vitD3K2, custom: customSupplement },
+        supplements: { zinc, selenium, vitD3K2, magnesium, custom: customSupplement },
         immuneModulation,
         reviewAfter,
       };
@@ -220,36 +238,97 @@ export default function ConsultationFormScreen() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }}>
               <div>
                 <label style={s.label}>{pronoun} is taking</label>
-                <input style={s.input} value={currentlyTaking} onChange={(e) => setCurrentlyTaking(e.target.value)} />
+                <div
+                  style={{
+                    ...s.input,
+                    height: "auto",
+                    maxHeight: 140,
+                    overflowY: "auto",
+                    display: "grid",
+                    gap: 6,
+                    padding: "10px 12px",
+                  }}
+                >
+                  {medications.length === 0 ? (
+                    <span style={{ fontSize: 13, color: theme.textMuted }}>No medications set up yet (add under Settings).</span>
+                  ) : (
+                    medications.map((m) => (
+                      <label key={m._id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, cursor: "pointer" }}>
+                        <input
+                          type="checkbox"
+                          checked={currentlyTakingMeds.includes(m._id)}
+                          onChange={() => toggleCurrentlyTakingMed(m._id)}
+                        />
+                        {m.name}
+                      </label>
+                    ))
+                  )}
+                </div>
               </div>
               <div>
                 <label style={s.label}>{pronoun} is feeling</label>
-                <input style={s.input} value={feeling} onChange={(e) => setFeeling(e.target.value)} />
-              </div>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 20 }}>
-              <div>
-                <label style={s.label}>Symptom Severity Score (SSS)</label>
-                <input type="number" step="0.1" style={s.input} value={sssScore} onChange={(e) => setSssScore(e.target.value)} />
-              </div>
-              <div>
-                <label style={s.label}>Linked Blood Test Report (optional)</label>
-                <select style={s.input} value={linkedReport} onChange={(e) => setLinkedReport(e.target.value)}>
-                  <option value="">None</option>
-                  {reports.map((r) => (
-                    <option key={r._id} value={r._id}>{new Date(r.date).toLocaleDateString()} — {r.labName || "No lab"}</option>
+                <select style={s.input} value={feeling} onChange={(e) => setFeeling(e.target.value)}>
+                  <option value="">Select...</option>
+                  {FEELING_OPTIONS.map((f) => (
+                    <option key={f} value={f}>{f}</option>
                   ))}
                 </select>
               </div>
             </div>
 
-            {isHashimotos && (
-              <div style={{ marginBottom: 20 }}>
-                <label style={s.label}>Ultrasound (U/S) Notes</label>
-                <textarea style={{ ...s.input, minHeight: 60, resize: "vertical", fontFamily: "inherit" }} value={ultrasoundNotes} onChange={(e) => setUltrasoundNotes(e.target.value)} />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 20 }}>
+              <div>
+                <label style={s.label}>Symptom Severity Score (SSS) — out of {SSS_MAX}</label>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <input
+                    type="number"
+                    step="1"
+                    min={0}
+                    max={SSS_MAX}
+                    style={s.input}
+                    value={sssScore}
+                    onChange={(e) => setSssScore(e.target.value)}
+                    placeholder="e.g. 14"
+                  />
+                  <span style={{ fontSize: 13.5, color: theme.textMuted, whiteSpace: "nowrap" }}>/ {SSS_MAX}</span>
+                </div>
               </div>
-            )}
+              <div>
+                <label style={s.label}>Refer for Thyroid US</label>
+                <select style={s.input} value={referForThyroidUS} onChange={(e) => setReferForThyroidUS(e.target.value)}>
+                  <option value="">Select...</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={s.h2}>Thyroid Ultrasound (U/S)</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 14, marginBottom: 20 }}>
+              <div>
+                <label style={s.label}>Thyroid US done?</label>
+                <select style={s.input} value={thyroidUSDone} onChange={(e) => setThyroidUSDone(e.target.value)}>
+                  <option value="">Select...</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+              {thyroidUSDone === "Yes" && (
+                <div>
+                  <label style={s.label}>Findings</label>
+                  <textarea
+                    style={{ ...s.input, minHeight: 44, resize: "vertical", fontFamily: "inherit" }}
+                    value={ultrasoundNotes}
+                    onChange={(e) => setUltrasoundNotes(e.target.value)}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div style={s.h2}>Blood Test Comparison</div>
+            <div style={{ marginBottom: 20 }}>
+              <LinkedReportsPicker reports={reports} value={linkedReports} onChange={setLinkedReports} />
+            </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 20 }}>
               <div>
@@ -356,6 +435,9 @@ export default function ConsultationFormScreen() {
                 </label>
                 <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13.5 }}>
                   <input type="checkbox" checked={vitD3K2} onChange={(e) => setVitD3K2(e.target.checked)} />Vit D3 / K2
+                </label>
+                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13.5 }}>
+                  <input type="checkbox" checked={magnesium} onChange={(e) => setMagnesium(e.target.checked)} />Magnesium
                 </label>
               </div>
               <input style={s.input} placeholder="Other supplements (optional)" value={customSupplement} onChange={(e) => setCustomSupplement(e.target.value)} />

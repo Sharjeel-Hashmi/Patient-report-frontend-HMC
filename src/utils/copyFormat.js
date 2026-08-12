@@ -74,13 +74,15 @@ export function buildCompareCopyText(prevReport, currReport) {
 
 /**
  * Builds aligned plain-text for a CONSULTATION note (Consultation Detail page copy).
- * Deliberately EXCLUDES the linked blood test values — those belong to the Report
- * itself and have their own copy button there; this keeps a consultation-note copy
- * focused on the clinical note, not a duplicate of lab data.
+ * Includes the linked blood test value(s) — single report, or a 2-column comparison
+ * when two reports are linked — so one Copy click carries the full note.
  * Uses a single TAB after "Label:" so it stays aligned in Word/WhatsApp/Gmail —
  * never space-padding (see note above on why spaces break in proportional fonts).
+ *
+ * `linkedReportObjs` (optional): 0, 1, or 2 full report objects (chronological order),
+ * resolved by the caller from consultation.linkedReports / legacy consultation.linkedReport.
  */
-export function buildConsultationCopyText(consultation, patientName) {
+export function buildConsultationCopyText(consultation, patientName, linkedReportObjs = []) {
   const lines = [];
   const push = (label, value) => {
     if (value === undefined || value === null || value === "") return;
@@ -90,13 +92,45 @@ export function buildConsultationCopyText(consultation, patientName) {
   lines.push(`${patientName} — ${consultation.visitTypeName} · ${consultation.conditionName} · ${fmtDate(consultation.date)}`);
   lines.push("");
 
+  const currentlyTakingNames = (consultation.currentlyTakingMeds || [])
+    .map((m) => m.medicationName)
+    .filter(Boolean)
+    .join(", ");
+
   push("Pt c/o", consultation.chiefComplaint);
-  push("Currently Taking", consultation.currentlyTaking);
+  push("Currently Taking", currentlyTakingNames);
   push("Feeling", consultation.feeling);
-  push("SSS Score", consultation.sssScore);
-  push("Ultrasound (U/S) Notes", consultation.ultrasoundNotes);
+  push("SSS Score", consultation.sssScore !== undefined && consultation.sssScore !== null && consultation.sssScore !== "" ? `${consultation.sssScore} / 50` : "");
+  push("Thyroid US done?", consultation.thyroidUSDone);
+  push("Findings", consultation.ultrasoundNotes);
+  push("Refer for Thyroid US", consultation.referForThyroidUS);
   push("Allergy", consultation.allergy);
   push("Medicines (current)", consultation.currentMedicines);
+
+  if (linkedReportObjs && linkedReportObjs.length > 0) {
+    lines.push("");
+    lines.push(linkedReportObjs.length === 2 ? "Blood Test Comparison" : "Blood Test");
+    if (linkedReportObjs.length === 2) {
+      const [prevReport, currReport] = linkedReportObjs;
+      lines.push(`(${fmtDate(prevReport.date)} vs ${fmtDate(currReport.date)})`);
+      Object.entries(RANGES).forEach(([key, range]) => {
+        const prevVal = prevReport[key];
+        const currVal = currReport[key];
+        if ((prevVal === undefined || prevVal === null || prevVal === "") && (currVal === undefined || currVal === null || currVal === "")) return;
+        const prevStr = prevVal === undefined || prevVal === null || prevVal === "" ? "-" : String(prevVal);
+        const currStr = currVal === undefined || currVal === null || currVal === "" ? "-" : String(currVal);
+        lines.push(`${range.label}${LABEL_TABS}${prevStr}${VALUE_TABS}${currStr}`);
+      });
+    } else {
+      const report = linkedReportObjs[0];
+      lines.push(`(${fmtDate(report.date)})`);
+      Object.entries(RANGES).forEach(([key, range]) => {
+        const val = report[key];
+        if (val === undefined || val === null || val === "") return;
+        lines.push(`${range.label}${LABEL_TABS}${val}`);
+      });
+    }
+  }
 
   const hasOE = consultation.bp || consultation.pulse || (consultation.spo2 !== undefined && consultation.spo2 !== null && consultation.spo2 !== "");
   if (hasOE) {
@@ -132,6 +166,7 @@ export function buildConsultationCopyText(consultation, patientName) {
   if (consultation.supplements?.zinc) supplementLabels.push("Zn");
   if (consultation.supplements?.selenium) supplementLabels.push("Selenium");
   if (consultation.supplements?.vitD3K2) supplementLabels.push("Vit D3 / K2");
+  if (consultation.supplements?.magnesium) supplementLabels.push("Magnesium");
   if (consultation.supplements?.custom) supplementLabels.push(consultation.supplements.custom);
   push("Nutritional Supplements", supplementLabels.join(", "));
 

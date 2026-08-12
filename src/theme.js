@@ -21,6 +21,12 @@ export const theme = {
   radius: "14px",
 };
 
+// Options for the "is feeling" dropdown on the Consultation form
+export const FEELING_OPTIONS = ["Worse", "Better", "Good", "Very Good"];
+
+// Symptom Severity Score is recorded out of this max (e.g. "14/50")
+export const SSS_MAX = 50;
+
 // Normal ranges for each thyroid test parameter
 export const RANGES = {
   tsh: { label: "TSH", unit: "mIU/L", min: 0.27, max: 4.2 },

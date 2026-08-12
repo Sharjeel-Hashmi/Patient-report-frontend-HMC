@@ -4,9 +4,9 @@ import { FiEdit2, FiTrash2, FiArrowLeft, FiPrinter, FiCheckCircle, FiXCircle, Fi
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import ConfirmModal from "../components/ConfirmModal";
-import StatusBadge from "../components/StatusBadge";
+import BloodTestPreview from "../components/BloodTestPreview";
 import { api } from "../api/api";
-import { theme, RANGES, getStatus } from "../theme";
+import { theme } from "../theme";
 import { s } from "../styles";
 import { buildConsultationCopyText } from "../utils/copyFormat";
 
@@ -57,7 +57,7 @@ export default function ConsultationDetailScreen() {
 
   const handleCopy = () => {
     if (!consultation || !patient) return;
-    const text = buildConsultationCopyText(consultation, patient.name);
+    const text = buildConsultationCopyText(consultation, patient.name, linkedReportObjs);
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -70,9 +70,22 @@ export default function ConsultationDetailScreen() {
   if (consultation.supplements?.zinc) supplementLabels.push("Zn");
   if (consultation.supplements?.selenium) supplementLabels.push("Selenium");
   if (consultation.supplements?.vitD3K2) supplementLabels.push("Vit D3 / K2");
+  if (consultation.supplements?.magnesium) supplementLabels.push("Magnesium");
   if (consultation.supplements?.custom) supplementLabels.push(consultation.supplements.custom);
 
-  const linkedReport = patient?.reports?.find((r) => r._id === consultation.linkedReport);
+  const currentlyTakingNames = (consultation.currentlyTakingMeds || []).map((m) => m.medicationName).filter(Boolean).join(", ");
+
+  // Backward compat: older consultations only had a single `linkedReport`.
+  const linkedReportIds =
+    consultation.linkedReports && consultation.linkedReports.length
+      ? consultation.linkedReports
+      : consultation.linkedReport
+      ? [consultation.linkedReport]
+      : [];
+  const linkedReportObjs = linkedReportIds
+    .map((rid) => patient?.reports?.find((r) => r._id === rid))
+    .filter(Boolean)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
 
   return (
     <div style={s.page}>
@@ -109,46 +122,24 @@ export default function ConsultationDetailScreen() {
           <div style={s.h2}>Consultation Details</div>
           <div style={{ marginBottom: 20 }}>
             <Row label="Pt c/o (Chief Complaint)" value={consultation.chiefComplaint} />
-            <Row label="Currently Taking" value={consultation.currentlyTaking} />
+            <Row label="Currently Taking" value={currentlyTakingNames} />
             <Row label="Feeling" value={consultation.feeling} />
-            <Row label="SSS Score" value={consultation.sssScore} />
-            <Row label="Ultrasound (U/S) Notes" value={consultation.ultrasoundNotes} />
+            <Row label="SSS Score" value={consultation.sssScore !== undefined && consultation.sssScore !== null ? `${consultation.sssScore} / 50` : ""} />
+            <Row label="Thyroid US done?" value={consultation.thyroidUSDone} />
+            <Row label="Findings" value={consultation.ultrasoundNotes} />
+            <Row label="Refer for Thyroid US" value={consultation.referForThyroidUS} />
             <Row label="Allergy" value={consultation.allergy} />
             <Row label="Medicines (current)" value={consultation.currentMedicines} />
           </div>
 
-          {linkedReport && (
+          {linkedReportObjs.length > 0 && (
             <>
-              <div style={s.h2}>Linked Blood Test — {new Date(linkedReport.date).toLocaleDateString()}</div>
-              <div style={{ display: "grid", gap: 10, marginBottom: 20 }}>
-                {Object.entries(RANGES).map(([key, range]) => {
-                  const value = linkedReport[key];
-                  const status = getStatus(key, value);
-                  return (
-                    <div
-                      key={key}
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        padding: "12px 14px",
-                        borderRadius: 10,
-                        border: `1px solid ${theme.border}`,
-                      }}
-                    >
-                      <div>
-                        <div style={{ fontWeight: 700, color: theme.text }}>{range.label}</div>
-                        <div style={{ fontSize: 12, color: theme.textMuted }}>Normal: {range.min}–{range.max} {range.unit}</div>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        <div style={{ fontSize: 18, fontWeight: 800, color: theme.text }}>
-                          {value !== undefined && value !== null && value !== "" ? value : "—"}
-                        </div>
-                        <StatusBadge status={status} />
-                      </div>
-                    </div>
-                  );
-                })}
+              <div style={s.h2}>
+                {linkedReportObjs.length === 2 ? "Linked Blood Test Comparison" : "Linked Blood Test"} —{" "}
+                {linkedReportObjs.map((r) => new Date(r.date).toLocaleDateString()).join(" vs ")}
+              </div>
+              <div style={{ marginBottom: 20 }}>
+                <BloodTestPreview reports={linkedReportObjs} />
               </div>
             </>
           )}
