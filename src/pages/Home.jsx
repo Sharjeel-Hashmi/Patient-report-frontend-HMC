@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiPlus, FiX, FiUsers, FiFileText, FiSearch, FiCalendar, FiChevronRight, FiChevronLeft, FiBarChart2 } from "react-icons/fi";
+import { FiPlus, FiX, FiUsers, FiFileText, FiSearch, FiCalendar, FiChevronRight, FiChevronLeft, FiBarChart2, FiClipboard } from "react-icons/fi";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { api } from "../api/api";
@@ -123,7 +123,7 @@ export default function Home() {
                       {p.dob ? `DOB: ${new Date(p.dob).toLocaleDateString()}` : "DOB not set"} · {p.gender || "N/A"}
                     </div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
                     <div style={{ textAlign: "right" }}>
                       <div style={{ fontSize: 13, fontWeight: 600, color: theme.primary, display: "flex", alignItems: "center", gap: 5, justifyContent: "flex-end" }}>
                         <FiFileText size={13} />
@@ -132,6 +132,17 @@ export default function Home() {
                       {p.reports.length > 0 && (
                         <div style={{ fontSize: 12, color: theme.textMuted }}>
                           Last: {new Date(p.reports[p.reports.length - 1].date).toLocaleDateString()}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: theme.orange, display: "flex", alignItems: "center", gap: 5, justifyContent: "flex-end" }}>
+                        <FiClipboard size={13} />
+                        {p.consultationsCount || 0} consultation{(p.consultationsCount || 0) !== 1 ? "s" : ""}
+                      </div>
+                      {p.lastConsultationDate && (
+                        <div style={{ fontSize: 12, color: theme.textMuted }}>
+                          Last: {new Date(p.lastConsultationDate).toLocaleDateString()}
                         </div>
                       )}
                     </div>

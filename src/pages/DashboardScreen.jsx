@@ -10,6 +10,7 @@ import {
   FiPieChart,
   FiActivity,
   FiArrowRight,
+  FiClipboard,
 } from "react-icons/fi";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -108,8 +109,10 @@ export default function DashboardScreen() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 20 }}>
           <StatCard icon={<FiUsers />} label="Total Patients" value={stats.totalPatients} color={{ color: theme.primary, bg: theme.primaryLight }} />
           <StatCard icon={<FiFileText />} label="Total Reports" value={stats.totalReports} color={{ color: theme.purple, bg: theme.purpleLight }} />
+          <StatCard icon={<FiClipboard />} label="Total Consultations" value={stats.totalConsultations} color={{ color: theme.orange, bg: theme.orangeBg }} />
           <StatCard icon={<FiUserPlus />} label="New Patients This Month" value={stats.newPatientsThisMonth} color={{ color: theme.green, bg: theme.greenBg }} />
           <StatCard icon={<FiPlusCircle />} label="Reports Added This Month" value={stats.reportsThisMonth} color={{ color: theme.blue, bg: theme.blueBg }} />
+          <StatCard icon={<FiClipboard />} label="Consultations This Month" value={stats.consultationsThisMonth} color={{ color: theme.orange, bg: theme.orangeBg }} />
         </div>
 
         {/* Alerts row */}

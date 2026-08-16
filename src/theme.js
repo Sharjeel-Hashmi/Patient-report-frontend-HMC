@@ -16,6 +16,8 @@ export const theme = {
   redBg: "#fdeaea",
   blue: "#3b82f6",
   blueBg: "#e9f1fd",
+  orange: "#f97316",
+  orangeBg: "#fff1e6",
   shadow: "0 2px 10px rgba(31, 41, 55, 0.06)",
   shadowMd: "0 6px 20px rgba(31, 41, 55, 0.10)",
   radius: "14px",
