@@ -14,7 +14,7 @@ export default function PaymentReminderModal() {
   return (
     <div style={overlayStyle}>
       <div style={modalStyle}>
-        <div style={{ fontSize: '28px', marginBottom: '8px' }}>⚠️</div>
+        <div style={{ fontSize: '36px', marginBottom: '10px' }}>⚠️</div>
         <h2 style={titleStyle}>Payment Reminder</h2>
 
         <p style={textStyle}>
@@ -29,7 +29,7 @@ export default function PaymentReminderModal() {
           suspended until the balance is settled.
         </p>
 
-        <p style={{ ...textStyle, fontSize: '13px', color: '#6b7280' }}>
+        <p style={{ ...textStyle, fontSize: '15px', color: '#6b7280' }}>
           For any questions regarding this invoice, please contact WebPalm.
         </p>
 
@@ -61,26 +61,26 @@ const overlayStyle = {
 
 const modalStyle = {
   backgroundColor: '#ffffff',
-  borderRadius: '12px',
-  padding: '28px',
-  maxWidth: '420px',
+  borderRadius: '14px',
+  padding: '40px',
+  maxWidth: '560px',
   width: '90%',
   boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
   textAlign: 'left',
 };
 
 const titleStyle = {
-  fontSize: '20px',
+  fontSize: '26px',
   fontWeight: 700,
-  margin: '0 0 16px 0',
+  margin: '0 0 20px 0',
   color: '#111827',
 };
 
 const textStyle = {
-  fontSize: '14px',
-  lineHeight: 1.5,
+  fontSize: '17px',
+  lineHeight: 1.6,
   color: '#374151',
-  marginBottom: '12px',
+  marginBottom: '16px',
 };
 
 const buttonRowStyle = {
@@ -91,22 +91,22 @@ const buttonRowStyle = {
 };
 
 const contactButtonStyle = {
-  padding: '8px 16px',
+  padding: '10px 20px',
   borderRadius: '6px',
   backgroundColor: '#2563eb',
   color: '#ffffff',
-  fontSize: '14px',
+  fontSize: '16px',
   fontWeight: 500,
   textDecoration: 'none',
   cursor: 'pointer',
 };
 
 const dismissButtonStyle = {
-  padding: '8px 16px',
+  padding: '10px 20px',
   borderRadius: '6px',
   backgroundColor: '#f3f4f6',
   color: '#374151',
-  fontSize: '14px',
+  fontSize: '16px',
   fontWeight: 500,
   border: 'none',
   cursor: 'pointer',
