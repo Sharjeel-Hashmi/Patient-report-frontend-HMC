@@ -15,6 +15,7 @@ import {
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import StatusBadge from "../components/StatusBadge";
+import PaymentReminderModal from "../components/PaymentReminderModal";
 import { api } from "../api/api";
 import { RANGES, theme } from "../theme";
 import { s } from "../styles";
@@ -93,6 +94,7 @@ export default function DashboardScreen() {
 
   return (
     <div style={s.page}>
+      <PaymentReminderModal />
       <Header
         title="Dashboard"
         right={
