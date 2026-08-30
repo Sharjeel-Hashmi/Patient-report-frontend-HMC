@@ -90,12 +90,14 @@ export default function Login() {
           </button>
         </form>
 
+        {/* Sign up temporarily hidden
         <div style={{ textAlign: "center", marginTop: 18, fontSize: 13.5, color: theme.textMuted }}>
           Don&apos;t have an account?{" "}
           <Link to="/signup" style={{ color: theme.primary, fontWeight: 600, textDecoration: "none" }}>
             Sign up
           </Link>
         </div>
+        */}
       </div>
     </div>
   );
