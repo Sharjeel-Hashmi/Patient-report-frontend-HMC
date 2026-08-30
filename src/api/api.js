@@ -131,6 +131,9 @@ export const api = {
   // Dashboard
   getDashboardStats: () => request("/dashboard"),
 
+  // System status (suspension lock)
+  getSystemStatus: () => request("/system/status"),
+
   // Visit Types (master data)
   getVisitTypes: () => request("/visit-types"),
   createVisitType: (name) => request("/visit-types", { method: "POST", body: JSON.stringify({ name }) }),

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FiPlus, FiX, FiUsers, FiFileText, FiSearch, FiCalendar, FiChevronRight, FiChevronLeft, FiBarChart2, FiClipboard } from "react-icons/fi";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import SuspendedScreen from "../components/SuspendedScreen";
 import { api } from "../api/api";
 import { theme } from "../theme";
 import { s } from "../styles";
@@ -20,7 +21,23 @@ export default function Home() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [suspended, setSuspended] = useState(false);
+  const [suspendMessage, setSuspendMessage] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const status = await api.getSystemStatus();
+        if (status.suspended) {
+          setSuspended(true);
+          setSuspendMessage(status.message);
+        }
+      } catch {
+        // if the status check itself fails (e.g. offline), fail-open rather than blocking the UI
+      }
+    })();
+  }, []);
 
   const loadPatients = useCallback(async () => {
     setLoading(true);
@@ -56,6 +73,16 @@ export default function Home() {
     setDobFilter("");
     setReportDateFilter("");
   };
+
+  if (suspended) {
+    return (
+      <div style={s.page}>
+        <Header title="Patients" showBack onBack={() => navigate("/")} />
+        <SuspendedScreen message={suspendMessage} />
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div style={s.page}>
